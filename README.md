@@ -1,59 +1,71 @@
-# Frontend
+# Онлайн-магазин (E-Commerce Store)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.2.
+Современный онлайн-магазин с полноценным Backend на .NET и Frontend на Angular, поддерживающий работу с базой данных, кэшированием и платежной системой Stripe.
 
-## Development server
+## 🛠 Стек технологий
 
-To start a local development server, run:
+### Backend
+* **Язык:** C# 10
+* **Платформа:** ASP.NET Core
+* **База данных:** SQL Server
+* **Кэширование:** Redis
 
-```bash
-ng serve
+### Frontend
+* **Фреймворк:** Angular
+* **Язык:** TypeScript
+* **Стилизация:** TailwindCSS
+
+---
+
+## ⚙️ Настройки конфигурации
+
+Перед запуском Backend-приложения добавьте следующие настройки в ваш файл конфигурации (`appsettings.json` или `appsettings.Development.json` / секреты пользователя):
+
+```json
+{
+  "Token": {
+    "Key": "your_data"
+  },
+  "StripeSettings": {
+    "WhSecret": "your_data",
+    "SecretKey": "your_data",
+    "PublishableKey": "your_data"
+  },
+  "ConnectionStrings": {
+    "Redis": "localhost",
+    "IdentityConnection": "Server=(localdb)\\MSSQLLocalDB;Database=EcommerceIdentity;Trusted_Connection=True;",
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=Ecommerce;Trusted_Connection=True;"
+  }
+}
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## 🚀 Как запустить проект
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### 1. Запуск инфраструктуры (Redis)
+Для работы кэша запустите Redis в Docker-контейнере:
 ```bash
-ng generate component component-name
+docker compose up -d --build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+### 2. Запуск Backend
+Перейдите в папку с проектом API и запустите команду автоматического отслеживания изменений (hot reload):
 ```bash
-ng generate --help
+dotnet watch run
+```
+*(Или просто `dotnet run`, если автоперезагрузка не требуется).*
+
+### 3. Запуск Frontend
+Перейдите в папку с фронтенд-приложением, установите зависимости (если запускаете впервые) и запустите сервер:
+```bash
+npm install
+npm run start
 ```
 
-## Building
+---
 
-To build the project run:
+## 🌐 Ссылки
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+После успешного запуска всех компонентов приложение будет доступно по адресу:
+👉 **[http://localhost:4200/](http://localhost:4200/)**
