@@ -1,146 +1,162 @@
 [
   {
-    "Name": "Angular Speedster Board 2000",
-    "Description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas porttitor congue massa. Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.",
-    "Price": 200,
-    "PictureUrl": "images/products/sb-ang1.png",
+    "Name": "ASUS ROG Strix G16",
+    "Description": "Powerful gaming laptop with a high-refresh-rate display, modern Intel processor and dedicated NVIDIA graphics. Designed for gaming, development and demanding applications.",
+    "Price": 1499.99,
+    "PictureUrl": "images/products/asus-rog-strix-g16.png",
     "ProductTypeId": 1,
     "ProductBrandId": 1
   },
   {
-    "Name": "Green Angular Board 3000",
-    "Description": "Nunc viverra imperdiet enim. Fusce est. Vivamus a tellus.",
-    "Price": 150,
-    "PictureUrl": "images/products/sb-ang2.png",
+    "Name": "ASUS Zenbook 14",
+    "Description": "Compact and lightweight premium laptop with a sharp OLED display, long battery life and excellent performance for work, study and everyday use.",
+    "Price": 1099.99,
+    "PictureUrl": "images/products/asus-zenbook-14.png",
     "ProductTypeId": 1,
     "ProductBrandId": 1
   },
   {
-    "Name": "Core Board Speed Rush 3",
-    "Description": "Suspendisse dui purus, scelerisque at, vulputate vitae, pretium mattis, nunc. Mauris eget neque at sem venenatis eleifend. Ut nonummy.",
-    "Price": 180,
-    "PictureUrl": "images/products/sb-core1.png",
+    "Name": "Lenovo Legion 5",
+    "Description": "Gaming laptop combining strong performance, a high-refresh-rate display and an efficient cooling system. Suitable for modern games and demanding workloads.",
+    "Price": 1299.99,
+    "PictureUrl": "images/products/lenovo-legion-5.png",
     "ProductTypeId": 1,
     "ProductBrandId": 2
   },
   {
-    "Name": "Net Core Super Board",
-    "Description": "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin pharetra nonummy pede. Mauris et orci.",
-    "Price": 300,
-    "PictureUrl": "images/products/sb-core2.png",
+    "Name": "Lenovo ThinkPad E14",
+    "Description": "Reliable business laptop with a comfortable keyboard, durable construction and enough performance for office applications, programming and everyday productivity.",
+    "Price": 899.99,
+    "PictureUrl": "images/products/lenovo-thinkpad-e14.png",
     "ProductTypeId": 1,
     "ProductBrandId": 2
   },
   {
-    "Name": "React Board Super Whizzy Fast",
-    "Description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas porttitor congue massa. Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.",
-    "Price": 250,
-    "PictureUrl": "images/products/sb-react1.png",
-    "ProductTypeId": 1,
+    "Name": "Apple iPhone 17",
+    "Description": "Modern Apple smartphone with a powerful processor, advanced camera system, bright display and all-day battery life.",
+    "Price": 999.99,
+    "PictureUrl": "images/products/apple-iphone-17.png",
+    "ProductTypeId": 2,
     "ProductBrandId": 4
   },
   {
-    "Name": "Typescript Entry Board",
-    "Description": "Aenean nec lorem. In porttitor. Donec laoreet nonummy augue.",
-    "Price": 120,
-    "PictureUrl": "images/products/sb-ts1.png",
+    "Name": "Apple iPhone 17 Pro",
+    "Description": "Premium smartphone with a professional-grade camera system, powerful Apple silicon and a high-quality display designed for demanding users.",
+    "Price": 1299.99,
+    "PictureUrl": "images/products/apple-iphone-17-pro.png",
+    "ProductTypeId": 2,
+    "ProductBrandId": 4
+  },
+  {
+    "Name": "Huawei Pura 80",
+    "Description": "Premium Huawei smartphone featuring a high-quality display, advanced photography capabilities and strong everyday performance.",
+    "Price": 899.99,
+    "PictureUrl": "images/products/huawei-pura-80.png",
+    "ProductTypeId": 2,
+    "ProductBrandId": 3
+  },
+  {
+    "Name": "Huawei Nova 13",
+    "Description": "Stylish smartphone with a vibrant display, capable camera system and efficient hardware for everyday communication and entertainment.",
+    "Price": 499.99,
+    "PictureUrl": "images/products/huawei-nova-13.webp",
+    "ProductTypeId": 2,
+    "ProductBrandId": 3
+  },
+  {
+    "Name": "Apple iPad Air",
+    "Description": "Versatile tablet with a powerful processor, sharp display and slim design. Great for studying, entertainment, drawing and productivity.",
+    "Price": 699.99,
+    "PictureUrl": "images/products/apple-ipad-air.webp",
+    "ProductTypeId": 3,
+    "ProductBrandId": 4
+  },
+  {
+    "Name": "Apple iPad Pro",
+    "Description": "High-performance professional tablet with a stunning display and powerful hardware for creative work, productivity and demanding applications.",
+    "Price": 1099.99,
+    "PictureUrl": "images/products/apple-ipad-pro.png",
+    "ProductTypeId": 3,
+    "ProductBrandId": 4
+  },
+  {
+    "Name": "Huawei MatePad 12",
+    "Description": "Large-screen tablet designed for entertainment, productivity and creative tasks. Offers a premium display and long battery life.",
+    "Price": 549.99,
+    "PictureUrl": "images/products/huawei-matepad-12.png",
+    "ProductTypeId": 3,
+    "ProductBrandId": 3
+  },
+  {
+    "Name": "Lenovo Tab P12",
+    "Description": "Large Android tablet with a sharp display and powerful speakers. A great choice for movies, browsing, studying and everyday productivity.",
+    "Price": 449.99,
+    "PictureUrl": "images/products/lenovo-tab-p12.png",
+    "ProductTypeId": 3,
+    "ProductBrandId": 2
+  },
+  {
+    "Name": "Apple Watch Series 11",
+    "Description": "Modern smartwatch with health and fitness features, a bright display and seamless integration with the Apple ecosystem.",
+    "Price": 429.99,
+    "PictureUrl": "images/products/apple-watch-series-11.png",
+    "ProductTypeId": 4,
+    "ProductBrandId": 4
+  },
+  {
+    "Name": "Apple Watch Ultra 3",
+    "Description": "Premium rugged smartwatch designed for outdoor activities, fitness and demanding everyday use with advanced health and training features.",
+    "Price": 799.99,
+    "PictureUrl": "images/products/apple-watch-ultra-3.png",
+    "ProductTypeId": 4,
+    "ProductBrandId": 4
+  },
+  {
+    "Name": "Huawei Watch GT 5",
+    "Description": "Elegant smartwatch with long battery life, health monitoring and comprehensive fitness tracking for everyday use.",
+    "Price": 299.99,
+    "PictureUrl": "images/products/huawei-watch-gt-5.png",
+    "ProductTypeId": 4,
+    "ProductBrandId": 3
+  },
+  {
+    "Name": "Huawei Watch 5",
+    "Description": "Premium smartwatch featuring a stylish design, advanced health tracking and a bright high-resolution display.",
+    "Price": 449.99,
+    "PictureUrl": "images/products/huawei-watch-5.png",
+    "ProductTypeId": 4,
+    "ProductBrandId": 3
+  },
+  {
+    "Name": "MSI Katana 15",
+    "Description": "Gaming laptop with powerful hardware, dedicated graphics and a high-refresh-rate display. Built for modern gaming and demanding applications.",
+    "Price": 1199.99,
+    "PictureUrl": "images/products/msi-katana-15.png",
     "ProductTypeId": 1,
     "ProductBrandId": 5
   },
   {
-    "Name": "Core Blue Hat",
-    "Description": "Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.",
-    "Price": 10,
-    "PictureUrl": "images/products/hat-core1.png",
+    "Name": "MSI Raider 18",
+    "Description": "High-end gaming laptop offering flagship performance, a large high-refresh-rate display and an advanced cooling system.",
+    "Price": 2499.99,
+    "PictureUrl": "images/products/msi-raider-18.webp",
+    "ProductTypeId": 1,
+    "ProductBrandId": 5
+  },
+  {
+    "Name": "ASUS ROG Phone 9",
+    "Description": "Gaming smartphone designed for demanding mobile games with a high-refresh-rate display, powerful hardware and advanced cooling.",
+    "Price": 1099.99,
+    "PictureUrl": "images/products/asus-rog-phone-9.png",
     "ProductTypeId": 2,
-    "ProductBrandId": 2
-  },
-  {
-    "Name": "Green React Woolen Hat",
-    "Description": "Suspendisse dui purus, scelerisque at, vulputate vitae, pretium mattis, nunc. Mauris eget neque at sem venenatis eleifend. Ut nonummy.",
-    "Price": 8,
-    "PictureUrl": "images/products/hat-react1.png",
-    "ProductTypeId": 2,
-    "ProductBrandId": 4
-  },
-  {
-    "Name": "Purple React Woolen Hat",
-    "Description": "Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.",
-    "Price": 15,
-    "PictureUrl": "images/products/hat-react2.png",
-    "ProductTypeId": 2,
-    "ProductBrandId": 4
-  },
-  {
-    "Name": "Blue Code Gloves",
-    "Description": "Nunc viverra imperdiet enim. Fusce est. Vivamus a tellus.",
-    "Price": 18,
-    "PictureUrl": "images/products/glove-code1.png",
-    "ProductTypeId": 4,
-    "ProductBrandId": 3
-  },
-  {
-    "Name": "Green Code Gloves",
-    "Description": "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin pharetra nonummy pede. Mauris et orci.",
-    "Price": 15,
-    "PictureUrl": "images/products/glove-code2.png",
-    "ProductTypeId": 4,
-    "ProductBrandId": 3
-  },
-  {
-    "Name": "Purple React Gloves",
-    "Description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas porttitor congue massa.",
-    "Price": 16,
-    "PictureUrl": "images/products/glove-react1.png",
-    "ProductTypeId": 4,
-    "ProductBrandId": 4
-  },
-  {
-    "Name": "Green React Gloves",
-    "Description": "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin pharetra nonummy pede. Mauris et orci.",
-    "Price": 14,
-    "PictureUrl": "images/products/glove-react2.png",
-    "ProductTypeId": 4,
-    "ProductBrandId": 4
-  },
-  {
-    "Name": "Redis Red Boots",
-    "Description": "Suspendisse dui purus, scelerisque at, vulputate vitae, pretium mattis, nunc. Mauris eget neque at sem venenatis eleifend. Ut nonummy.",
-    "Price": 250,
-    "PictureUrl": "images/products/boot-redis1.png",
-    "ProductTypeId": 3,
-    "ProductBrandId": 6
-  },
-  {
-    "Name": "Core Red Boots",
-    "Description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas porttitor congue massa. Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.",
-    "Price": 189.99,
-    "PictureUrl": "images/products/boot-core2.png",
-    "ProductTypeId": 3,
-    "ProductBrandId": 2
-  },
-  {
-    "Name": "Core Purple Boots",
-    "Description": "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin pharetra nonummy pede. Mauris et orci.",
-    "Price": 199.99,
-    "PictureUrl": "images/products/boot-core1.png",
-    "ProductTypeId": 3,
-    "ProductBrandId": 2
-  },
-  {
-    "Name": "Angular Purple Boots",
-    "Description": "Aenean nec lorem. In porttitor. Donec laoreet nonummy augue.",
-    "Price": 150,
-    "PictureUrl": "images/products/boot-ang2.png",
-    "ProductTypeId": 3,
     "ProductBrandId": 1
   },
   {
-    "Name": "Angular Blue Boots",
-    "Description": "Suspendisse dui purus, scelerisque at, vulputate vitae, pretium mattis, nunc. Mauris eget neque at sem venenatis eleifend. Ut nonummy.",
-    "Price": 180,
-    "PictureUrl": "images/products/boot-ang1.png",
+    "Name": "Lenovo Tab Extreme",
+    "Description": "Large premium tablet with a high-quality display and powerful hardware, designed for entertainment, multitasking and productivity.",
+    "Price": 799.99,
+    "PictureUrl": "images/products/lenovo-tab-extreme.png",
     "ProductTypeId": 3,
-    "ProductBrandId": 1
+    "ProductBrandId": 2
   }
 ]

@@ -11,15 +11,16 @@ namespace Infrastructure.Identity
         {
             if(!userManager.Users.Any())
             {
+                Console.WriteLine("AppIdentityDbContextSeed-----------------------------------");
                 var user = new AppUser
                 {
-                    DisplayName = "Bob",
-                    Email = "bob@test.com",
-                    UserName = "bob@test.com",
+                    DisplayName = "Dima",
+                    Email = "dima@gmail.com",
+                    UserName = "dima",
                     Address = new Address
                     {
-                        FirstName = "Bob",
-                        LastName = "Bobbity",
+                        FirstName = "Dima",
+                        LastName = "Dimka",
                         Street = "10 the street",
                         City = "New York",
                         State = "NY",

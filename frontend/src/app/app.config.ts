@@ -3,7 +3,6 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
-import { errorInterceptor } from './_interceptors/error-interceptor';
 import { LoadingInterceptor } from './_interceptors/loading-interceptor';
 import { jwtInterceptor } from './_interceptors/jwt-interceptor';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -31,7 +30,6 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(withInterceptors([
       jwtInterceptor,
-      errorInterceptor
       // (req, next) => {
       //   const token = localStorage.getItem('token');
       //   console.log('INLINE INTERCEPTOR RUNNING, token=', token);
