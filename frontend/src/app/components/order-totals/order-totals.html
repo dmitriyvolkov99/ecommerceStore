@@ -1,4 +1,4 @@
-<div class="bg-light px-4 py-3 text-uppercase font-weight-bold">
+<!-- <div class="bg-light px-4 py-3 text-uppercase font-weight-bold">
     Order Sumary
 </div>
 
@@ -18,4 +18,32 @@
             <strong>{{(basketTotal$ | async)?.total | currency}}</strong>
         </li>
     </ul>
+</div> -->
+
+
+<div class="bg-light px-4 py-3 text-uppercase font-weight-bold">
+  Сумма заказа
+</div>
+
+<div class="p-4">
+  <p class="font-italic mb-4">
+    Стоимость доставки будет добавлена в зависимости от выбора при оформлении заказа
+  </p>
+
+  @if (totals(); as t) {
+    <ul class="list-unstyled mb-4">
+      <li class="d-flex justify-content-between py-3 border-bottom">
+        <strong class="text-muted">Сумма товаров</strong>
+        <strong>{{ t.subtotal | currency }}</strong>
+      </li>
+      <li class="d-flex justify-content-between py-3 border-bottom">
+        <strong class="text-muted">Доставка и обработка</strong>
+        <strong>{{ t.shipping | currency }}</strong>
+      </li>
+      <li class="d-flex justify-content-between py-3 border-bottom">
+        <strong class="text-muted">Итого</strong>
+        <strong>{{ t.total | currency }}</strong>
+      </li>
+    </ul>
+  }
 </div>

@@ -1,4 +1,4 @@
-<div class="d-flex flex-column flex-md-row align-items-center justify-content-between p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm fixed-top">
+<!-- <div class="d-flex flex-column flex-md-row align-items-center justify-content-between p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm fixed-top">
    <h2>Shop</h2>
   <nav class="m2-2 my-md-0 mr-md-3 text-uppercase" style="font-size: larger;">
     <a class="me-3 py-2" [routerLink]="['/']" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Home</a>
@@ -32,5 +32,47 @@
           </div>
         </div>
       </ng-container>
+  </div>
+</div> -->
+
+
+<div class="d-flex flex-column flex-md-row align-items-center justify-content-between p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm fixed-top">
+  <h2>Магазин</h2>
+
+  <nav class="m2-2 my-md-0 mr-md-3 text-uppercase" style="font-size: larger;">
+    <a class="me-3 py-2" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Главная</a>
+    <a class="me-3 py-2" routerLink="/shop" routerLinkActive="active">Магазин</a>
+  </nav>
+
+  <div class="d-flex align-items-center">
+    <a routerLink="/basket" class="position-relative">
+      <i class="fa fa-shopping-cart fa-2x mr-5 text-dark"></i>
+      @if (basket(); as basket) {
+        <div class="cart-no">{{ basket.items.length }}</div>
+      }
+    </a>
+
+    @if (currentUser(); as user) {
+      <div class="dropdown ml-3 mr-5" dropdown>
+        <a class="dropdown-toggle" style="cursor: pointer;" dropdownToggle>
+          <strong>Добро пожаловать, {{ user.displayName }}</strong>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right" style="cursor: pointer;" *dropdownMenu>
+          <a routerLink="/basket" class="dropdown-item d-flex align-items-center py-2">
+            <i class="fa fa-shopping-cart mr-3"></i> Корзина
+          </a>
+          <a routerLink="/orders" class="dropdown-item d-flex align-items-center py-2">
+            <i class="fa fa-history mr-3"></i> Мои заказы
+          </a>
+          <div class="dropdown-divider"></div>
+          <a (click)="logout()" class="dropdown-item d-flex align-items-center py-2">
+            <i class="fa fa-sign-out mr-3"></i> Выйти
+          </a>
+        </div>
+      </div>
+    } @else {
+      <a routerLink="/account/login" class="btn btn-outline-secondary mr-2">Войти</a>
+      <a routerLink="/account/register" class="btn btn-outline-secondary mr-3">Регистрация</a>
+    }
   </div>
 </div>

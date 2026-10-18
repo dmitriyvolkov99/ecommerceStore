@@ -1,45 +1,42 @@
-import { Component } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AccountService } from '../../_services/account-service';
+import { Component, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { AccountService } from '../../_services/account-service';
 import { TextInput } from '../../components/text-input/text-input';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    TextInput
-  ],
+  imports: [ReactiveFormsModule, TextInput],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
 export class Login {
-  loginForm!: FormGroup;
-  returnUrl!: string;
+  private readonly fb = inject(FormBuilder);
+  private readonly accountService = inject(AccountService);
+  private readonly router = inject(Router);
 
-  constructor(private accountService: AccountService, private router: Router, private activatedRoute: ActivatedRoute) { }
+  private readonly returnUrl =
+    inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl') || '/shop';
 
-  ngOnInit(): void {
-    this.returnUrl = this.activatedRoute.snapshot.queryParams['returnUrl'] || "/shop";
-    this.createLoginForm();
-  }
+  protected readonly error = signal<string | null>(null);
 
-  createLoginForm(){
-    this.loginForm = new FormGroup({
-      email: new FormControl('', [Validators.required, Validators.pattern('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$')]),
-      password: new FormControl('', Validators.required),
+  protected readonly loginForm = this.fb.nonNullable.group({
+    email: [
+      '',
+      [Validators.required, Validators.pattern('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$')],
+    ],
+    password: ['', Validators.required],
+  });
+
+  protected onSubmit() {
+    this.error.set(null);
+
+    this.accountService.login(this.loginForm.getRawValue()).subscribe({
+      next: () => this.router.navigateByUrl(this.returnUrl),
+      error: err => {
+        console.error(err);
+        this.error.set('Не удалось войти. Проверьте адрес почты и пароль.');
+      },
     });
-  }
-
-  onSubmit(){
-    this.accountService.login(this.loginForm.value).subscribe(() => {
-      this.router.navigateByUrl(this.returnUrl);
-    }, error => {
-      console.log(error);
-    })
   }
 }

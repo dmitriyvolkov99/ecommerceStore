@@ -1,36 +1,27 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CurrencyPipe, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { IOrder } from '../_models/order';
 import { OrderService } from '../_services/order-service';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-order',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule
-  ],
+  imports: [RouterLink, CurrencyPipe, DatePipe],
   templateUrl: './order.html',
   styleUrl: './order.css',
 })
 export class Order {
-  orders = signal<IOrder[] | null>([]);
-  
-  constructor(private ordersService: OrderService) { }
-
-  ngOnInit(): void {
-    this.getOrders();
-  }
-
-  getOrders() {
-    this.ordersService.getOrdersForUser().subscribe((orders: IOrder[]) => {
-      this.orders.set(orders);
-    }, error => {
-      console.log("dasd",error);
-    })
-  }
+  protected readonly orders = toSignal(
+    inject(OrderService)
+      .getOrdersForUser()
+      .pipe(
+        catchError(error => {
+          console.error(error);
+          return of([] as IOrder[]);
+        }),
+      ),
+    { initialValue: [] as IOrder[] },
+  );
 }

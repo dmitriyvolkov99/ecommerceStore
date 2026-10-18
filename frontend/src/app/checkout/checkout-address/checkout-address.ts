@@ -1,40 +1,35 @@
-import { Component, Input } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { AccountService } from '../../_services/account-service';
-import { IAddress } from '../../_models/address';
+import { Component, computed, inject, input } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { AccountService } from '../../_services/account-service';
 import { TextInput } from '../../components/text-input/text-input';
 
 @Component({
   selector: 'app-checkout-address',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    TextInput
-  ],
+  imports: [ReactiveFormsModule, TextInput],
   templateUrl: './checkout-address.html',
   styleUrl: './checkout-address.css',
 })
 export class CheckoutAddress {
-  @Input() checkoutForm!: FormGroup;
+  private readonly accountService = inject(AccountService);
+  private readonly toastr = inject(ToastrService);
 
-  constructor(private accountService: AccountService, private toastr: ToastrService) { }
+  readonly checkoutForm = input.required<FormGroup>();
 
-  ngOnInit(): void {
-  }
+  protected readonly addressForm = computed(
+    () => this.checkoutForm().get('addressForm') as FormGroup,
+  );
 
-  saveUserAddress(){
-    this.accountService.updateUserAddress(this.checkoutForm?.get('addressForm')?.value).subscribe((address:IAddress) => {
-      this.toastr.success('Address saved');
-      this.checkoutForm.get("addressForm")?.reset(address);
-    }, error => {
-      this.toastr.error(error.message);
-      console.log(error);
-    })
+  saveUserAddress() {
+    this.accountService.updateUserAddress(this.addressForm().value).subscribe({
+      next: address => {
+        this.toastr.success('Адрес сохранён');
+        this.addressForm().reset(address);
+      },
+      error: error => {
+        this.toastr.error(error.message);
+        console.error(error);
+      },
+    });
   }
 }

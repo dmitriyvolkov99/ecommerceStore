@@ -1,38 +1,36 @@
-import { Component, Input, signal } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, inject, input } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CurrencyPipe } from '@angular/common';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { catchError, of } from 'rxjs';
 import { IDeliveryMethod } from '../../_models/deliveryMethod';
 import { CheckoutService } from '../../_services/checkout-service';
 import { BasketService } from '../../_services/basket-service';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-checkout-delivery',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule
-  ],
+  imports: [ReactiveFormsModule, CurrencyPipe],
   templateUrl: './checkout-delivery.html',
   styleUrl: './checkout-delivery.css',
 })
 export class CheckoutDelivery {
-  @Input() checkoutForm!: FormGroup;
-  deliveryMethods= signal<IDeliveryMethod[]>([]);
-  
-  constructor(private checkoutService: CheckoutService, private basketService: BasketService) { }
-  
-  ngOnInit(): void {
-    this.checkoutService.getDeliveryMethods().subscribe({
-      next: (dm: IDeliveryMethod[]) => this.deliveryMethods.set(dm),
-      error: (err) => console.log(err)
-    })
-  }
+  private readonly basketService = inject(BasketService);
 
-  setShippingPrice(deliveryMethod: IDeliveryMethod){
+  readonly checkoutForm = input.required<FormGroup>();
+
+  protected readonly deliveryMethods = toSignal(
+    inject(CheckoutService)
+      .getDeliveryMethods()
+      .pipe(
+        catchError(error => {
+          console.error(error);
+          return of([] as IDeliveryMethod[]);
+        }),
+      ),
+    { initialValue: [] as IDeliveryMethod[] },
+  );
+
+  protected setShippingPrice(deliveryMethod: IDeliveryMethod) {
     this.basketService.setShippingPrice(deliveryMethod);
   }
-
 }

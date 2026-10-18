@@ -1,49 +1,25 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Observable } from 'rxjs';
-import { IBasket, IBasketItem } from '../../_models/basket';
-import { BasketService } from '../../_services/basket-service';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { IBasketItem } from '../../_models/basket';
+import { BasketService } from '../../_services/basket-service';
 
 @Component({
   selector: 'app-basket-summary',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    FontAwesomeModule
-  ],
+  imports: [CurrencyPipe, RouterLink, FontAwesomeModule],
   templateUrl: './basket-summary.html',
   styleUrl: './basket-summary.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BasketSummary {
-  basket$!: Observable<IBasket | null>;
-  @Output() decrement: EventEmitter<IBasketItem> = new EventEmitter<IBasketItem>();
-  @Output() increment: EventEmitter<IBasketItem> = new EventEmitter<IBasketItem>();
-  @Output() remove: EventEmitter<IBasketItem> = new EventEmitter<IBasketItem>();
-  @Input() isBasket = true;
+  protected readonly basket = inject(BasketService).basket;
+  protected readonly faTrash = faTrash;
 
-  faTrash = faTrash;
-  constructor(private basketservice: BasketService) { }
+  readonly isBasket = input(true);
 
-  ngOnInit(): void {
-    this.basket$ = this.basketservice.basket$;
-  }
-
-  decrementItemQuantity(item: IBasketItem){
-    this.decrement.emit(item);
-  }
-
-  incrementItemQuantity(item: IBasketItem){
-    this.increment.emit(item);
-  }
-
-  removeBasketItem(item: IBasketItem){
-    this.remove.emit(item);
-  }
+  readonly decrement = output<IBasketItem>();
+  readonly increment = output<IBasketItem>();
+  readonly remove = output<IBasketItem>();
 }

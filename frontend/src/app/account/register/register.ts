@@ -1,66 +1,55 @@
-import { Component } from '@angular/core';
-import { AsyncValidatorFn, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AccountService } from '../../_services/account-service';
+import { Component, inject, signal } from '@angular/core';
+import { AsyncValidatorFn, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { map, of, switchMap, timer } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { AccountService } from '../../_services/account-service';
 import { TextInput } from '../../components/text-input/text-input';
 
 @Component({
   selector: 'app-register',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    TextInput
-  ],
+  imports: [ReactiveFormsModule, TextInput],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
 export class Register {
-  registerForm!: FormGroup;
-  errors: string[] = []
+  private readonly fb = inject(FormBuilder);
+  private readonly accountService = inject(AccountService);
+  private readonly router = inject(Router);
 
-  constructor(private fb: FormBuilder, private accountService: AccountService, private router: Router) { }
+  protected readonly errors = signal<string[]>([]);
 
-  ngOnInit(): void {
-    this.createRegisterForm();
+  protected readonly registerForm = this.fb.nonNullable.group({
+    displayName: ['', Validators.required],
+    email: [
+      '',
+      [Validators.required, Validators.pattern('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$')],
+      [this.validateEmailNotTaken()],
+    ],
+    password: ['', Validators.required],
+  });
+
+  protected onSubmit() {
+    this.accountService.register(this.registerForm.getRawValue()).subscribe({
+      next: () => this.router.navigateByUrl('/shop'),
+      error: error => {
+        console.error(error);
+        this.errors.set(error?.error?.errors ?? ['Не удалось зарегистрироваться']);
+      },
+    });
   }
 
-  createRegisterForm(){
-    this.registerForm = this.fb.group({
-      displayName: [null, [Validators.required]],
-      email: [null, [Validators.required, Validators.pattern('^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$')]
-    , [this.validateEmailNotTaken()]],
-      password: [null, [Validators.required]]
-    })
-  }
-
-  onSubmit(){
-    this.accountService.register(this.registerForm.value).subscribe(response => {
-      this.router.navigateByUrl('/shop');
-    }, error => {
-      console.log(error);
-      this.errors = error.errors;
-    })
-  }
-
-  validateEmailNotTaken(): AsyncValidatorFn{
-    return control => {
-      return timer(500).pipe(
+  private validateEmailNotTaken(): AsyncValidatorFn {
+    return control =>
+      timer(500).pipe(
         switchMap(() => {
-          if(!control.value){
+          if (!control.value) {
             return of(null);
           }
 
-          return this.accountService.checkEmailExists(control.value).pipe(
-            map(res => {
-              return res ? {emailExists: true} : null;
-            })
-          )
-        })
+          return this.accountService
+            .checkEmailExists(control.value)
+            .pipe(map(exists => (exists ? { emailExists: true } : null)));
+        }),
       );
-    };
   }
 }

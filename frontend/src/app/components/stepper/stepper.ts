@@ -1,35 +1,23 @@
-import { CdkStepper, CdkStepperModule } from '@angular/cdk/stepper';
-import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatStepperModule } from '@angular/material/stepper';
-import { RouterModule } from '@angular/router';
+import { CdkStepper } from '@angular/cdk/stepper';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, forwardRef, input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-stepper',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    
-    MatStepperModule,
-    CdkStepperModule,
-  ],
+  imports: [NgTemplateOutlet],
+  // Без этого провайдера <cdk-step> не находит родительский степпер
+  providers: [{ provide: CdkStepper, useExisting: forwardRef(() => Stepper) }],
   templateUrl: './stepper.html',
   styleUrl: './stepper.css',
 })
-export class Stepper extends CdkStepper {
-  @Input() linearModeSelected: boolean = false;
+export class Stepper extends CdkStepper implements OnInit {
+  readonly linearModeSelected = input(false);
 
   ngOnInit(): void {
-    this.linear = this.linearModeSelected;
+    this.linear = this.linearModeSelected();
   }
 
-  onClick(index: number){
+  onClick(index: number) {
     this.selectedIndex = index;
   }
-
-
 }

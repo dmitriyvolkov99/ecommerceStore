@@ -1,124 +1,105 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of, tap } from 'rxjs';
 import { IProduct } from '../_models/product';
 import { IBrand } from '../_models/brand';
 import { IType } from '../_models/productType';
 import { IPagination, Pagination } from '../_models/pagination';
 import { ShopParams } from '../_models/shopParams';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { map, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ShopService {
-  baseUrl = environment.apiUrl;
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = environment.apiUrl;
+
   products: IProduct[] = [];
   brands: IBrand[] = [];
   types: IType[] = [];
   pagination = new Pagination();
   shopParams = new ShopParams();
-  productCache = new Map();
+  productCache = new Map<string, IProduct[]>();
 
-  constructor(private http: HttpClient) { }
-
-  getProducts(useCache: boolean){
-    if(useCache === false)
-    {
-      this.productCache = new Map();
+  getProducts(useCache: boolean): Observable<IPagination> {
+    if (!useCache) {
+      this.productCache.clear();
     }
 
-    if(this.productCache.size > 0 && useCache === true)
-    {
-      if(this.productCache.has(Object.values(this.shopParams).join('-')))
-      {
-        this.pagination.data = this.productCache.get(Object.values(this.shopParams).join('-'));
-        return of(this.pagination);
-      }
+    const key = this.cacheKey();
+    const cached = this.productCache.get(key);
+
+    if (useCache && cached) {
+      this.pagination.data = cached;
+      return of(this.pagination);
     }
 
-    let params = new HttpParams();
+    let params = new HttpParams()
+      .set('sort', this.shopParams.sort)
+      .set('pageIndex', this.shopParams.pageNumber.toString())
+      .set('pageSize', this.shopParams.pageSize.toString());
 
-    if(this.shopParams.brandId !== 0){
-      params = params.append("brandId", this.shopParams.brandId.toString());
+    if (this.shopParams.brandId !== 0) {
+      params = params.set('brandId', this.shopParams.brandId.toString());
     }
 
-    if(this.shopParams.typeId !== 0){
-      params = params.append("typeId", this.shopParams.typeId.toString());
+    if (this.shopParams.typeId !== 0) {
+      params = params.set('typeId', this.shopParams.typeId.toString());
     }
 
-    if(this.shopParams.search){
-      params = params.append("search", this.shopParams.search);
+    if (this.shopParams.search) {
+      params = params.set('search', this.shopParams.search);
     }
 
-    params = params.append("sort", this.shopParams.sort);
-    params = params.append("pageIndex", this.shopParams.pageNumber.toString());
-    params = params.append("pageIndex", this.shopParams.pageSize.toString());
-    
-    return this.http.get<IPagination>(this.baseUrl + "products", {observe: 'response', params})
-      .pipe(
-        map(response => {
-          if(response && response.body){
-            this.productCache.set(Object.values(this.shopParams).join('-'), response.body.data);
-            this.pagination = response.body;
-          }
-
-          return this.pagination;
-        })
-      );
+    return this.http.get<IPagination>(`${this.baseUrl}products`, { params }).pipe(
+      tap(response => {
+        this.productCache.set(key, response.data);
+        this.pagination = response;
+      }),
+    );
   }
 
-  setShopParams(params: ShopParams){
+  setShopParams(params: ShopParams) {
     this.shopParams = params;
   }
 
-  getShopParams()
-  {
+  getShopParams() {
     return this.shopParams;
   }
 
-  getProduct(id: number)
-  {
-    let product: IProduct | undefined = undefined;
-    this.productCache.forEach((products: IProduct[]) => {
-      product = products.find(p => p.id === id);
-    })
-
-    if(product)
-    {
-      return of(product);
+  getProduct(id: number) {
+    for (const products of this.productCache.values()) {
+      const product = products.find(p => p.id === id);
+      if (product) {
+        return of(product);
+      }
     }
 
-    return this.http.get<IProduct>(this.baseUrl + 'products/' + id).pipe(
-      map(p => p as IProduct | null)
-    );
+    return this.http.get<IProduct>(`${this.baseUrl}products/${id}`);
   }
 
-  getBrands(){
-    if(this.brands.length > 0)
-    {
+  getBrands() {
+    if (this.brands.length > 0) {
       return of(this.brands);
     }
 
-    return this.http.get<IBrand[]>(this.baseUrl + "products/brands").pipe(
-      map(response => {
-        this.brands = response;
-        return response;
-      })
-    );
+    return this.http
+      .get<IBrand[]>(`${this.baseUrl}products/brands`)
+      .pipe(tap(brands => (this.brands = brands)));
   }
 
-  getTypes(){
-    if(this.types.length > 0)
-    {
+  getTypes() {
+    if (this.types.length > 0) {
       return of(this.types);
     }
 
-    return this.http.get<IType[]>(this.baseUrl + "products/types").pipe(
-      map(response => {
-        this.types = response;
-        return response;
-      })
-    );
+    return this.http
+      .get<IType[]>(`${this.baseUrl}products/types`)
+      .pipe(tap(types => (this.types = types)));
+  }
+
+  private cacheKey() {
+    return Object.values(this.shopParams).join('-');
   }
 }

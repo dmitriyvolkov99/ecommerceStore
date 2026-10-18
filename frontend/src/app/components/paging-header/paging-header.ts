@@ -1,28 +1,18 @@
-import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 @Component({
   selector: 'app-paging-header',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule
-  ],
   templateUrl: './paging-header.html',
   styleUrl: './paging-header.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PagingHeader {
-  @Input() pageNumber: number = 0;
-  @Input() pageSize: number = 0;
-  @Input() totalCount: number = 0;
-  
-  constructor() { }
+  readonly pageNumber = input(0);
+  readonly pageSize = input(0);
+  readonly totalCount = input(0);
 
-  ngOnInit(): void {
-  }
-
+  protected readonly from = computed(() => (this.pageNumber() - 1) * this.pageSize() + 1);
+  protected readonly to = computed(() =>
+    Math.min(this.pageNumber() * this.pageSize(), this.totalCount()),
+  );
 }

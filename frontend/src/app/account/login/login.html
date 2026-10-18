@@ -1,12 +1,18 @@
 <div class="d-flex justify-content-center text-center">
-    <div class="col-3">
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <h1 class="h3 mb-3 fw-normal">Login</h1>
-    
-        <app-text-input formControlName="email" [label]="'Email Address'"></app-text-input>
-        <app-text-input formControlName="password" [label]="'Password'" [type]="'password'"></app-text-input>
-    
-        <button [disabled]="loginForm.invalid" class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
-      </form>
-    </div>
+  <div class="col-3">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <h1 class="h3 mb-3 fw-normal">Вход</h1>
+
+      <app-text-input formControlName="email" label="Адрес электронной почты"></app-text-input>
+      <app-text-input formControlName="password" label="Пароль" type="password"></app-text-input>
+
+      @if (error(); as message) {
+        <p class="text-danger">{{ message }}</p>
+      }
+
+      <button [disabled]="loginForm.invalid" class="w-100 btn btn-lg btn-primary" type="submit">
+        Войти
+      </button>
+    </form>
+  </div>
 </div>

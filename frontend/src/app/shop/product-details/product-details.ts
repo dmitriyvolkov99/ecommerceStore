@@ -1,63 +1,48 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CurrencyPipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { catchError, map, of, switchMap } from 'rxjs';
 import { IProduct } from '../../_models/product';
 import { BasketService } from '../../_services/basket-service';
 import { ShopService } from '../../_services/shop-service';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-product-details',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule
-  ],
+  imports: [CurrencyPipe],
   templateUrl: './product-details.html',
   styleUrl: './product-details.css',
 })
 export class ProductDetails {
-  product = signal<IProduct | null>(null);
-  quantity = 1;
-  productLoading = signal(false);
+  private readonly basketService = inject(BasketService);
+  private readonly shopService = inject(ShopService);
 
-  constructor(private basketService: BasketService, private shopService: ShopService, private activatedRoute: ActivatedRoute) { }
+  protected readonly quantity = signal(1);
 
-  ngOnInit(): void {
-    this.loadProduct();
+  // undefined — идёт загрузка, null — товар не найден или произошла ошибка
+  protected readonly product = toSignal(
+    inject(ActivatedRoute).paramMap.pipe(
+      map(params => Number(params.get('id'))),
+      switchMap(id =>
+        this.shopService.getProduct(id).pipe(
+          catchError(error => {
+            console.error(error);
+            return of(null);
+          }),
+        ),
+      ),
+    ),
+  );
+
+  protected addItemToBasket(product: IProduct) {
+    this.basketService.addItemToBasket(product, this.quantity());
   }
 
-  addItemToBasket(){
-    this.basketService.addItemToBasket(this.product()!, this.quantity);
+  protected incrementQuantity() {
+    this.quantity.update(q => q + 1);
   }
 
-  incrementQuantity(){
-    this.quantity++;
+  protected decrementQuantity() {
+    this.quantity.update(q => Math.max(1, q - 1));
   }
-
-  decrementQuantity(){
-    if(this.quantity > 1){
-      this.quantity--;
-    }
-  }
-  
-  loadProduct(){
-    this.productLoading.set(true)
-    const id = Number(this.activatedRoute.snapshot.paramMap.get('id'));
-    console.log(this.activatedRoute.snapshot)
-    this.shopService.getProduct(id).subscribe({
-      next: (product) => {
-        if (product) {
-          this.product.set(product);
-          this.productLoading.set(false)
-        } else {
-          console.log("Product not found");
-        }
-      },
-      error: (err) => console.error(err)
-    });
-  }
-
 }

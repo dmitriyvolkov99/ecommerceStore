@@ -1,34 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { IOrder } from '../../_models/order';
-import { Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-checkout-success',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule
-  ],
+  imports: [RouterLink],
   templateUrl: './checkout-success.html',
   styleUrl: './checkout-success.css',
 })
 export class CheckoutSuccess {
-  order!: IOrder;
-
-  constructor(private router: Router) {
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras?.state;
-
-    if(state){
-      this.order = state as IOrder;
-    }
-   }
-
-  ngOnInit(): void {
-  }
-
+  // Заказ приходит через state навигации; в конструкторе/инициализаторе поля он ещё доступен
+  protected readonly order = inject(Router).currentNavigation()?.extras.state as
+    | IOrder
+    | undefined;
 }

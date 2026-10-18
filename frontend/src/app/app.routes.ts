@@ -1,19 +1,30 @@
 import { Routes } from '@angular/router';
 import { Home } from './home/home';
-import { TestError } from './_errors/test-error/test-error';
-import { ServerError } from './_errors/server-error/server-error';
-import { NotFound } from './_errors/not-found/not-found';
-import { AuthGuard } from './_guards/auth-guard';
+import { authGuard } from './_guards/auth-guard';
 
 export const routes: Routes = [
-  {path: '', component: Home},
-  {path: 'test-error', component: TestError},
-  {path: 'server-error', component: ServerError},
-  {path: 'not-found', component: NotFound},
-  {path: 'shop', loadChildren: () => import('./shop/shop.routes').then(r => r.shopRoutes)},
-  {path: 'basket', loadChildren: () => import('./basket/basket.routes').then(r => r.basketRoutes)},
-  {path: 'checkout', canActivate: [AuthGuard], loadChildren: () => import('./checkout/checkout.routes').then(r => r.checkoutRoutes)},
-  {path: 'orders', canActivate: [AuthGuard], loadChildren: () => import('./order/order.routes').then(r => r.orderRoutes)},
-  {path: 'account', loadChildren: () => import('./account/account.routes').then(r => r.accountRoutes)},
-  {path: '**', redirectTo: '', pathMatch: 'full'}
+  { path: '', component: Home },
+  {
+    path: 'shop',
+    loadChildren: () => import('./shop/shop.routes').then(m => m.shopRoutes),
+  },
+  {
+    path: 'basket',
+    loadChildren: () => import('./basket/basket.routes').then(m => m.basketRoutes),
+  },
+  {
+    path: 'checkout',
+    canActivate: [authGuard],
+    loadChildren: () => import('./checkout/checkout.routes').then(m => m.checkoutRoutes),
+  },
+  {
+    path: 'orders',
+    canActivate: [authGuard],
+    loadChildren: () => import('./order/order.routes').then(m => m.orderRoutes),
+  },
+  {
+    path: 'account',
+    loadChildren: () => import('./account/account.routes').then(m => m.accountRoutes),
+  },
+  { path: '**', redirectTo: '', pathMatch: 'full' },
 ];

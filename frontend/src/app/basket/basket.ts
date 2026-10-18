@@ -1,43 +1,31 @@
-import { Component } from '@angular/core';
-import { Observable } from 'rxjs';
-import { IBasket, IBasketItem } from '../_models/basket';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { IBasketItem } from '../_models/basket';
 import { BasketService } from '../_services/basket-service';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { OrderTotals } from '../components/order-totals/order-totals';
 import { BasketSummary } from '../components/basket-summary/basket-summary';
+
 @Component({
   selector: 'app-basket',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    OrderTotals,
-    BasketSummary,
-  ],
+  imports: [RouterLink, OrderTotals, BasketSummary],
   templateUrl: './basket.html',
   styleUrl: './basket.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Basket {
-  basket$!: Observable<IBasket | null>
-  constructor(private basketService: BasketService) { }
+  private readonly basketService = inject(BasketService);
 
-  ngOnInit(): void {
-    this.basket$ = this.basketService.basket$;
-  }
+  protected readonly basket = this.basketService.basket;
 
-  removeBasketItem(item: IBasketItem){
+  removeBasketItem(item: IBasketItem) {
     this.basketService.removeItemFromBasket(item);
   }
 
-  incrementItemQuantity(item: IBasketItem){
+  incrementItemQuantity(item: IBasketItem) {
     this.basketService.incrementItemQuantity(item);
   }
 
-  decrementItemQuantity(item: IBasketItem){
+  decrementItemQuantity(item: IBasketItem) {
     this.basketService.decrementItemQuantity(item);
   }
 }

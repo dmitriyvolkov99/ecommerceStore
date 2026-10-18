@@ -1,139 +1,139 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  OnDestroy,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { NavigationExtras, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { ToastrService } from 'ngx-toastr';
 import { IBasket } from '../../_models/basket';
-import { NavigationExtras, Router, RouterModule } from '@angular/router';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasketService } from '../../_services/basket-service';
 import { CheckoutService } from '../../_services/checkout-service';
-import { ToastrService } from 'ngx-toastr';
-import { CommonModule } from '@angular/common';
 import { TextInput } from '../../components/text-input/text-input';
-declare var Stripe: any;
+
+declare const Stripe: any;
+
 @Component({
   selector: 'app-checkout-payment',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    TextInput
-  ],
+  imports: [ReactiveFormsModule, TextInput],
   templateUrl: './checkout-payment.html',
   styleUrl: './checkout-payment.css',
 })
-export class CheckoutPayment {
-  @Input() checkoutForm!: FormGroup;
-  @ViewChild('cardNumber', {static: true}) cardNumberElement!: ElementRef;
-  @ViewChild('cardExpiry', {static: true}) cardExpiryElement!: ElementRef;
-  @ViewChild('cardCvc', {static: true}) cardCvcElement!: ElementRef;
-  stripe: any;
-  cardNumber: any;
-  cardExpiry: any;
-  cardCvc: any;
-  cardErrors: any;
-  cardHandler = this.onChange.bind(this);
-  loading = false;
-  cardNumberValid = false;
-  cardExpiryValid = false;
-  cardCvcValid = false;
+export class CheckoutPayment implements AfterViewInit, OnDestroy {
+  private readonly basketService = inject(BasketService);
+  private readonly checkoutService = inject(CheckoutService);
+  private readonly toastr = inject(ToastrService);
+  private readonly router = inject(Router);
 
-  constructor(
-    private basketService: BasketService, 
-    private checkoutService: CheckoutService, 
-    private toastr: ToastrService, 
-    private router: Router
-    ) { }
+  readonly checkoutForm = input.required<FormGroup>();
+
+  private readonly cardNumberElement = viewChild.required<ElementRef<HTMLElement>>('cardNumber');
+  private readonly cardExpiryElement = viewChild.required<ElementRef<HTMLElement>>('cardExpiry');
+  private readonly cardCvcElement = viewChild.required<ElementRef<HTMLElement>>('cardCvc');
+
+  protected readonly cardErrors = signal<string | null>(null);
+  protected readonly loading = signal(false);
+  protected readonly cardNumberValid = signal(false);
+  protected readonly cardExpiryValid = signal(false);
+  protected readonly cardCvcValid = signal(false);
+
+  private stripe: any;
+  private cardNumber: any;
+  private cardExpiry: any;
+  private cardCvc: any;
+
+  private readonly cardHandler = (event: any) => this.onChange(event);
 
   ngAfterViewInit(): void {
     this.stripe = Stripe('pk_test_JkiAIKy2xXuU08cecNSD4KDa00lXHFn7FO');
     const elements = this.stripe.elements();
 
-    this.cardNumber = elements.create('cardNumber');
-    this.cardNumber.mount(this.cardNumberElement.nativeElement);
-    this.cardNumber.addEventListener('change', this.cardHandler);
-
-    this.cardExpiry = elements.create('cardExpiry');
-    this.cardExpiry.mount(this.cardExpiryElement.nativeElement);
-    this.cardExpiry.addEventListener('change', this.cardHandler);
-
-    this.cardCvc = elements.create('cardCvc');
-    this.cardCvc.mount(this.cardCvcElement.nativeElement);
-    this.cardCvc.addEventListener('change', this.cardHandler);
-
+    this.cardNumber = this.mountElement(elements, 'cardNumber', this.cardNumberElement());
+    this.cardExpiry = this.mountElement(elements, 'cardExpiry', this.cardExpiryElement());
+    this.cardCvc = this.mountElement(elements, 'cardCvc', this.cardCvcElement());
   }
 
   ngOnDestroy(): void {
-    this.cardNumber.destroy();
-    this.cardExpiry.destroy();
-    this.cardCvc.destroy();
+    this.cardNumber?.destroy();
+    this.cardExpiry?.destroy();
+    this.cardCvc?.destroy();
   }
 
-  onChange(event: any){
-    if(event.error){
-      this.cardErrors = event.error.message;
-    }else{
-      this.cardErrors = null;
-    }
+  private mountElement(elements: any, type: string, host: ElementRef<HTMLElement>) {
+    const element = elements.create(type);
+    element.mount(host.nativeElement);
+    element.addEventListener('change', this.cardHandler);
+    return element;
+  }
 
-    switch(event.elementType){
+  private onChange(event: any) {
+    this.cardErrors.set(event.error?.message ?? null);
+
+    switch (event.elementType) {
       case 'cardNumber':
-        this.cardNumberValid = event.complete;
+        this.cardNumberValid.set(event.complete);
         break;
       case 'cardExpiry':
-        this.cardExpiryValid = event.complete;
+        this.cardExpiryValid.set(event.complete);
         break;
       case 'cardCvc':
-        this.cardCvcValid = event.complete;
+        this.cardCvcValid.set(event.complete);
         break;
     }
   }
-//4242 4242 4242 4242 - тестовая карта
-  async submitOrder(){
-    this.loading = true;
-    const basket = this.basketService.getCurrentBasketValue();
 
-    if(!basket) return
+  // 4242 4242 4242 4242 — тестовая карта
+  async submitOrder() {
+    const basket = this.basketService.basket();
+    if (!basket) return;
 
-    try{
+    this.loading.set(true);
+
+    try {
       const createdOrder = await this.createOrder(basket);
       const paymentResult = await this.confirmPaymentWithStripe(basket);
-      console.log("createdOrder", createdOrder)
-      console.log("paymentResult", paymentResult)
-      if(paymentResult.paymentIntent){
+
+      if (paymentResult.paymentIntent) {
         this.basketService.deleteBasket(basket);
-        const navigationExtras: NavigationExtras = {state: createdOrder};
-        this.router.navigate(['checkout/success'], navigationExtras);
-      }else{
+        const navigationExtras: NavigationExtras = { state: createdOrder };
+        this.router.navigate(['checkout', 'success'], navigationExtras);
+      } else {
         this.toastr.error(paymentResult.error.message);
       }
-      this.loading = false;
-    }catch(error){
-      console.log(error);
-      this.loading = false;
+    } catch (error) {
+      console.error(error);
+      this.toastr.error('Не удалось оформить заказ');
+    } finally {
+      this.loading.set(false);
     }
   }
 
-  private async confirmPaymentWithStripe(basket: IBasket) {
+  private confirmPaymentWithStripe(basket: IBasket) {
     return this.stripe.confirmCardPayment(basket.clientSecret, {
       payment_method: {
         card: this.cardNumber,
         billing_details: {
-          name: this.checkoutForm?.get('paymentForm')?.get('nameOnCard')?.value
-        }
-      }
+          name: this.checkoutForm().get('paymentForm')?.get('nameOnCard')?.value,
+        },
+      },
     });
   }
 
-  private async createOrder(basket: IBasket) {
-    const orderToCreate = this.getOrderToCreate(basket);
-    return this.checkoutService.createOrder(orderToCreate).toPromise();
+  private createOrder(basket: IBasket) {
+    return firstValueFrom(this.checkoutService.createOrder(this.getOrderToCreate(basket)));
   }
 
-  getOrderToCreate(basket: IBasket) {
-    return{
+  private getOrderToCreate(basket: IBasket) {
+    return {
       basketId: basket.id,
-      deliveryMethodId: +this.checkoutForm.get("deliveryForm")?.get('deliveryMethod')?.value,
-      shipToAddress: this.checkoutForm.get('addressForm')?.value
-    }
+      deliveryMethodId: +this.checkoutForm().get('deliveryForm')?.get('deliveryMethod')?.value,
+      shipToAddress: this.checkoutForm().get('addressForm')?.value,
+    };
   }
 }

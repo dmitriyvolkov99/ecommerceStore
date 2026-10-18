@@ -1,44 +1,44 @@
-import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideToastr } from 'ngx-toastr';
 
 import { routes } from './app.routes';
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
-import { LoadingInterceptor } from './_interceptors/loading-interceptor';
 import { jwtInterceptor } from './_interceptors/jwt-interceptor';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BrowserModule } from '@angular/platform-browser';
-import { NgxSpinnerModule } from 'ngx-spinner';
-import { BrowserAnimationsModule, provideAnimations } from '@angular/platform-browser/animations';
-import { provideToastr } from 'ngx-toastr';
-import { CdkStepperModule } from '@angular/cdk/stepper';
-import { MatStepperModule } from '@angular/material/stepper';
-
+import { loadingInterceptor } from './_interceptors/loading-interceptor';
+import { AccountService } from './_services/account-service';
+import { BasketService } from './_services/basket-service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Angular 21: zoneless по умолчанию, provideZonelessChangeDetection() не нужен
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideAnimations(),
-    importProvidersFrom(
-      BrowserAnimationsModule,
-      BrowserModule,
-      FormsModule,
-      ReactiveFormsModule,
-      NgxSpinnerModule,
-      CdkStepperModule,
-      MatStepperModule,
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([jwtInterceptor, loadingInterceptor]),
     ),
-    provideHttpClient(withInterceptors([
-      jwtInterceptor,
-      // (req, next) => {
-      //   const token = localStorage.getItem('token');
-      //   console.log('INLINE INTERCEPTOR RUNNING, token=', token);
-      //   if (token) {
-      //     req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` }});
-      //   }
-      //   return next(req);
-      // }
-    ])),
+    // Нужен только пока ngx-toastr использует @angular/animations
+    provideAnimations(),
     provideToastr(),
-  ]
+    // Загружаем текущего пользователя до первой навигации, чтобы guard видел актуальное состояние
+    provideAppInitializer(() =>
+      inject(AccountService).loadCurrentUser(localStorage.getItem('token')),
+    ),
+    // Корзину грузим в фоне: запуск приложения она не блокирует
+    provideAppInitializer(() => {
+      const basketId = localStorage.getItem('basket_id');
+      if (basketId) {
+        inject(BasketService)
+          .getBasket(basketId)
+          .subscribe({ error: err => console.error('Failed to load basket', err) });
+      }
+    }),
+  ],
 };

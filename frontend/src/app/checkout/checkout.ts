@@ -1,87 +1,63 @@
-import { Component } from '@angular/core';
-import { Observable } from 'rxjs';
-import { IBasketTotals } from '../_models/basket';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasketService } from '../_services/basket-service';
+import { Component, effect, inject } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { AccountService } from '../_services/account-service';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { BasketService } from '../_services/basket-service';
 import { OrderTotals } from '../components/order-totals/order-totals';
-import { CheckoutPayment } from './checkout-payment/checkout-payment';
-import { CdkStepperModule } from '@angular/cdk/stepper';
-import { CheckoutReview } from './checkout-review/checkout-review';
-import { CheckoutDelivery } from './checkout-delivery/checkout-delivery';
 import { CheckoutAddress } from './checkout-address/checkout-address';
-import { Stepper } from '../components/stepper/stepper';
-import { MatStepperModule } from '@angular/material/stepper';
-
+import { CheckoutDelivery } from './checkout-delivery/checkout-delivery';
+import { CheckoutReview } from './checkout-review/checkout-review';
+import { CheckoutPayment } from './checkout-payment/checkout-payment';
 
 @Component({
   selector: 'app-checkout',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    OrderTotals,
-    CheckoutAddress,
-    CheckoutDelivery,
-    CheckoutReview,
-    CheckoutPayment,
-    Stepper,
-    CdkStepperModule,
-    MatStepperModule
-  ],
+  imports: [OrderTotals, CheckoutAddress, CheckoutDelivery, CheckoutReview, CheckoutPayment],
   templateUrl: './checkout.html',
   styleUrl: './checkout.css',
 })
 export class Checkout {
-  basketTotals$!: Observable<IBasketTotals | null>;
-  checkoutForm!: FormGroup;
+  private readonly fb = inject(FormBuilder);
+  private readonly accountService = inject(AccountService);
+  private readonly basketService = inject(BasketService);
 
-  constructor(private fb: FormBuilder, private accountService: AccountService, private basketService: BasketService) { }
+  protected readonly checkoutForm = this.fb.nonNullable.group({
+    addressForm: this.fb.nonNullable.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      street: ['', Validators.required],
+      city: ['', Validators.required],
+      state: ['', Validators.required],
+      zipCode: ['', Validators.required],
+    }),
+    deliveryForm: this.fb.nonNullable.group({
+      deliveryMethod: ['', Validators.required],
+    }),
+    paymentForm: this.fb.nonNullable.group({
+      nameOnCard: ['', Validators.required],
+    }),
+  });
 
-  ngOnInit(): void {
-    this.createCheckoutForm();
-    this.getAddressFormValues();
-    this.getDeliveryMethodValue();
-    this.basketTotals$ = this.basketService.basketTotal$;
-  }
+  constructor() {
+    this.loadAddress();
 
-  createCheckoutForm(){
-    this.checkoutForm = this.fb.group({
-      addressForm: this.fb.group({
-        firstName: [null, Validators.required],
-        lastName: [null, Validators.required],
-        street: [null, Validators.required],
-        city: [null, Validators.required],
-        state: [null, Validators.required],
-        zipCode: [null, Validators.required],
-      }),
-      deliveryForm: this.fb.group({
-        deliveryMethod: [null, Validators.required]
-      }),
-      paymentForm: this.fb.group({
-        nameOnCard: [null, Validators.required]
-      })
+    // Корзина может догрузиться уже после открытия страницы, поэтому следим за сигналом
+    effect(() => {
+      const deliveryMethodId = this.basketService.basket()?.deliveryMethodId;
+      if (deliveryMethodId) {
+        this.checkoutForm.controls.deliveryForm.controls.deliveryMethod.patchValue(
+          deliveryMethodId.toString(),
+        );
+      }
     });
   }
 
-  getAddressFormValues(){
-    this.accountService.getUserAddress().subscribe(address => {
-      if(address){
-        this.checkoutForm.get('addressForm')?.patchValue(address);
-      }
-    }, error => {
-      console.log(error);
-    })
-  }
-
-  getDeliveryMethodValue(){
-    const basket = this.basketService.getCurrentBasketValue();
-    if(basket && basket.deliveryMethodId){
-      this.checkoutForm.get("deliveryForm")?.get("deliveryMethod")?.patchValue(basket.deliveryMethodId.toString());
-    }
+  private loadAddress() {
+    this.accountService.getUserAddress().subscribe({
+      next: address => {
+        if (address) {
+          this.checkoutForm.controls.addressForm.patchValue(address);
+        }
+      },
+      error: error => console.error(error),
+    });
   }
 }

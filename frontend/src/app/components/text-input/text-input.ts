@@ -1,53 +1,64 @@
-import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, Self, ViewChild } from '@angular/core';
-import { FormsModule, NgControl, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import {
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ControlValueAccessor, NgControl } from '@angular/forms';
 
 @Component({
   selector: 'app-text-input',
-   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule
-  ],
   templateUrl: './text-input.html',
   styleUrl: './text-input.css',
 })
-export class TextInput {
-  @ViewChild('input', {static: true}) input!: ElementRef;
-  @Input() type = 'text';
-  @Input() label: string = "";
+export class TextInput implements ControlValueAccessor, OnInit {
+  protected readonly controlDir = inject(NgControl, { self: true });
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
+  readonly type = input('text');
+  readonly label = input('');
 
-  constructor(@Self() public controlDir: NgControl) {
+  protected readonly value = signal('');
+  protected readonly disabled = signal(false);
+
+  private onChange: (value: string) => void = () => {};
+  protected onTouched: () => void = () => {};
+
+  constructor() {
     this.controlDir.valueAccessor = this;
-   }
+  }
 
   ngOnInit(): void {
-    const control = this.controlDir.control;
-    const validators = control?.validator ? [control.validator] : [];
-    const asyncValidators = control?.asyncValidator ? [control.asyncValidator] : [];
-
-    control?.setValidators(validators);
-    control?.setAsyncValidators(asyncValidators);
-    control?.updateValueAndValidity();
+    // Без zone.js результат async-валидатора сам по себе перерисовку не запускает
+    this.controlDir.control?.events
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.cdr.markForCheck());
   }
 
-  onChange(event: any){}
-
-  onTouched(){}
-
-  writeValue(obj: any): void {
-    this.input.nativeElement.value = obj || '';
+  protected onInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.value.set(value);
+    this.onChange(value);
   }
 
-  registerOnChange(fn: any): void {
+  writeValue(value: string | null): void {
+    this.value.set(value ?? '');
+  }
+
+  registerOnChange(fn: (value: string) => void): void {
     this.onChange = fn;
   }
 
-  registerOnTouched(fn: any): void {
+  registerOnTouched(fn: () => void): void {
     this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled.set(isDisabled);
   }
 }

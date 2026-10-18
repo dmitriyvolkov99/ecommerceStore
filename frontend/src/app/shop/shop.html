@@ -1,74 +1,91 @@
 <div class="container mt-5">
-    <div class="row">
-        <section class="col-3">
-                <h5 class="text-warning ml-3">Sort</h5>
-                <select #sortSelect name="" class="custom-select mb-3" (change)="onSortSelected(sortSelect.value)">
-                    <option *ngFor="let sort of sortOptions"
-                    [selected]="shopParams.sort === sort.value"
-                    [value]="sort.value">
-                        {{sort.name}}
-                    </option>
-                </select>
-    
-                <ng-container *ngIf="!filtersLoading()">
-                    <h5 class="text-warning ml-3">Brands</h5>
-                     <ul class="list-group my-3">
-                        <li class="list-group-item" *ngFor="let brand of brands()" [class.active]="brand.id == this.shopParams.brandId"
-                        [value]="brand.id" (click)="onBrandSelected(brand.id)">
-                            {{brand.name}}
-                        </li>
-                    </ul>
-        
-                    <h5 class="text-warning ml-3">Types</h5>
-        
-                    <ul class="list-group my-3">
-                        <li class="list-group-item" *ngFor="let type of types()" [class.active]="type.id == this.shopParams.typeId"
-                        [value]="type.id" (click)="onTypeSelected(type.id)">
-                            {{type.name}}
-                        </li>
-                    </ul>
-                </ng-container>
-                    <ng-template #filtersSkeleton *ngIf="filtersLoading()">
-                                <div>loading filters</div>
-                            </ng-template>
+  <div class="row">
+    <section class="col-3">
+      <h5 class="text-warning ml-3">Сортировка</h5>
+      <select #sortSelect class="custom-select mb-3" (change)="onSortSelected(sortSelect.value)">
+        @for (sort of sortOptions; track sort.value) {
+          <option [value]="sort.value" [selected]="shopParams.sort === sort.value">
+            {{ sort.name }}
+          </option>
+        }
+      </select>
 
+      @if (filtersLoading()) {
+        <div>Загрузка фильтров…</div>
+      } @else {
+        <h5 class="text-warning ml-3">Бренды</h5>
+        <ul class="list-group my-3">
+          @for (brand of brands(); track brand.id) {
+            <li
+              class="list-group-item"
+              [class.active]="brand.id === shopParams.brandId"
+              (click)="onBrandSelected(brand.id)"
+            >
+              {{ brand.name }}
+            </li>
+          }
+        </ul>
 
-                        
-        </section>
+        <h5 class="text-warning ml-3">Типы</h5>
+        <ul class="list-group my-3">
+          @for (type of types(); track type.id) {
+            <li
+              class="list-group-item"
+              [class.active]="type.id === shopParams.typeId"
+              (click)="onTypeSelected(type.id)"
+            >
+              {{ type.name }}
+            </li>
+          }
+        </ul>
+      }
+    </section>
 
-            <section class="col-9" *ngIf="!productsLoading()">
-            <div class="d-flex justify-content-between align-items-center pb-2">
-                
-                <app-paging-header
-                    [totalCount]="this.totalCount"
-                    [pageSize]="this.shopParams.pageSize"
-                    [pageNumber]="this.shopParams.pageNumber">
-                </app-paging-header>
-                <div class="form-inline mt-2" *ngIf="products.length > 0">
-                    <input (keyup.enter)="onSearch()" class="form-control mr-2" #search style="width: 300px;" placeholder="Search" type="text">
-                    <button class="btn btn-outline-primary my-2" (click)="onSearch()">Search</button>
-                    <button class="btn btn-outline-success ml-2 my-2" (click)="onReset()">Reset</button>
-                </div>
+    <section class="col-9">
+      <div class="d-flex justify-content-between align-items-center pb-2">
+        <app-paging-header
+          [totalCount]="totalCount()"
+          [pageSize]="shopParams.pageSize"
+          [pageNumber]="shopParams.pageNumber"
+        ></app-paging-header>
+
+        <div class="form-inline mt-2">
+          <input
+            #search
+            (keyup.enter)="onSearch()"
+            [value]="shopParams.search"
+            class="form-control mr-2"
+            style="width: 300px;"
+            placeholder="Поиск"
+            type="text"
+          />
+          <button class="btn btn-outline-primary my-2" (click)="onSearch()">Найти</button>
+          <button class="btn btn-outline-success ml-2 my-2" (click)="onReset()">Сбросить</button>
+        </div>
+      </div>
+
+      @if (productsLoading()) {
+        <div>Загрузка товаров…</div>
+      } @else {
+        <div class="row">
+          @for (item of products(); track item.id) {
+            <div class="col-4 mb-4">
+              <app-product-item [product]="item"></app-product-item>
             </div>
- 
-            <div class="row">
-                <div class="col-4 mb-4" *ngFor="let item of products()">
-                    <app-product-item [product]="item"></app-product-item>
-                </div>
-            </div>
-            <div class="d-flex justify-content-center" *ngIf="this.totalCount > 0">
-                <app-pager
-                    [pageSize]="this.shopParams.pageSize"
-                    [totalCount]="this.totalCount"
-                    [pageNumber]="shopParams.pageNumber"
-                    (pageChanged)="onPageChanged($event)">
-                </app-pager>
-            </div>
-        </section>
-            <ng-template #productsSkeleton *ngIf="productsLoading()">
-                <div>loading products</div>
-            </ng-template>
+          }
+        </div>
 
-        
-    </div>
+        @if (totalCount() > 0) {
+          <div class="d-flex justify-content-center">
+            <app-pager
+              [pageSize]="shopParams.pageSize"
+              [totalCount]="totalCount()"
+              [pageNumber]="shopParams.pageNumber"
+              (pageChanged)="onPageChanged($event)"
+            ></app-pager>
+          </div>
+        }
+      }
+    </section>
+  </div>
 </div>

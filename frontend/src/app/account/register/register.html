@@ -1,17 +1,21 @@
 <div class="d-flex justify-content-center text-center">
-    <div class="col-3">
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-        <h1 class="h3 mb-3 fw-normal">Register</h1>
-    
-        <app-text-input formControlName="displayName" [label]="'DisplayName'"></app-text-input>
-        <app-text-input formControlName="email" [label]="'Email Address'"></app-text-input>
-        <app-text-input formControlName="password" [label]="'Password'" [type]="'password'"></app-text-input>
-    
-        <ul class="text-danger list-unstyled" *ngIf="errors">
-            <li *ngFor="let error of errors">{{error}}</li>
-        </ul>
+  <div class="col-3">
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <h1 class="h3 mb-3 fw-normal">Регистрация</h1>
 
-        <button  class="w-100 btn btn-lg btn-primary" type="submit">Register</button>
-      </form>
-    </div>
+      <app-text-input formControlName="displayName" label="Имя"></app-text-input>
+      <app-text-input formControlName="email" label="Адрес электронной почты"></app-text-input>
+      <app-text-input formControlName="password" label="Пароль" type="password"></app-text-input>
+
+      @if (errors().length > 0) {
+        <ul class="text-danger list-unstyled">
+          @for (error of errors(); track $index) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      }
+
+      <button class="w-100 btn btn-lg btn-primary" type="submit">Зарегистрироваться</button>
+    </form>
+  </div>
 </div>

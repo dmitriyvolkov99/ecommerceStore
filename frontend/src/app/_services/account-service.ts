@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { map, of, ReplaySubject, tap } from 'rxjs';
-import { IUser } from '../_models/user';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { catchError, of, tap } from 'rxjs';
+import { IUser } from '../_models/user';
 import { IAddress } from '../_models/address';
 import { environment } from '../../environments/environment';
 
@@ -10,75 +10,71 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class AccountService {
-    baseUrl = environment.apiUrl;
-  private currentUserSource = new ReplaySubject<IUser | null>(1);
-  currentUser$ = this.currentUserSource.asObservable();
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
 
+  private readonly baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private router: Router) { }
+  private readonly _currentUser = signal<IUser | null>(null);
+  readonly currentUser = this._currentUser.asReadonly();
+  readonly isLoggedIn = computed(() => this._currentUser() !== null);
 
-  loadCurrentUser(token: string){
-    if(token === null){
-      this.currentUserSource.next(null);
+  loadCurrentUser(token: string | null) {
+    if (!token) {
+      this._currentUser.set(null);
       return of(null);
     }
-    let headers = new HttpHeaders();
-    headers = headers.set("Authorization", `Bearer ${token}`);
-    return this.http.get<IUser>(this.baseUrl + 'account', {headers}).pipe(
+
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    return this.http.get<IUser | null>(`${this.baseUrl}account`, { headers }).pipe(
       tap(user => {
+        this._currentUser.set(user ?? null);
         if (user) {
-        this.currentUserSource.next(user);
-        localStorage.setItem('token', user.token);
-      } else {
-        this.currentUserSource.next(null);
-      }
+          localStorage.setItem('token', user.token);
+        }
       }),
-      map(user => user as IUser | null)
-    )
+      catchError(() => {
+        this._currentUser.set(null);
+        return of(null);
+      }),
+    );
   }
 
-  login(values: any){
-    return this.http.post<IUser>(this.baseUrl + "account/login", values).pipe(
-      map((user: IUser) => {
-        if(user){
-          localStorage.setItem("token", user.token);
-          this.currentUserSource.next(user);
-        }
-      })
-    )
+  login(values: { email: string; password: string }) {
+    return this.http.post<IUser>(`${this.baseUrl}account/login`, values).pipe(
+      tap(user => this.setUser(user)),
+    );
   }
 
-  register(values: any){
-    return this.http.post<IUser>(this.baseUrl + "account/register", values).pipe(
-      map((user: IUser) => {
-        if(user){
-          localStorage.setItem("token", user.token);
-          this.currentUserSource.next(user);
-        }
-      })
-    )
+  register(values: unknown) {
+    return this.http.post<IUser>(`${this.baseUrl}account/register`, values).pipe(
+      tap(user => this.setUser(user)),
+    );
   }
 
-  logout(){
-    localStorage.removeItem("token");
-    this.currentUserSource.next(null);
+  logout() {
+    localStorage.removeItem('token');
+    this._currentUser.set(null);
     this.router.navigateByUrl('/');
   }
 
-  checkEmailExists(email: string){
-    return this.http.get(this.baseUrl + "account/emailexists?email=" + email);
+  checkEmailExists(email: string) {
+    const params = new HttpParams().set('email', email);
+    return this.http.get<boolean>(`${this.baseUrl}account/emailexists`, { params });
   }
 
-  getUserAddress(){
-    const token = localStorage.getItem('token');
-    
-   
-    let headers = new HttpHeaders();
-    headers = headers.set("Authorization", `Bearer ${token}`);
-    return this.http.get<IAddress>(this.baseUrl + 'account/address', {headers});
+  getUserAddress() {
+    return this.http.get<IAddress>(`${this.baseUrl}account/address`);
   }
 
-  updateUserAddress(address: IAddress){
-    return this.http.put<IAddress>(this.baseUrl + 'account/address', address);
+  updateUserAddress(address: IAddress) {
+    return this.http.put<IAddress>(`${this.baseUrl}account/address`, address);
+  }
+
+  private setUser(user: IUser | null) {
+    if (!user) return;
+    localStorage.setItem('token', user.token);
+    this._currentUser.set(user);
   }
 }

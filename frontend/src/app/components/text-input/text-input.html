@@ -1,4 +1,4 @@
-<div class="form-floating mb-2">
+<!-- <div class="form-floating mb-2">
     <input [ngClass]="(controlDir && controlDir.control && controlDir.control.touched) ? !controlDir.control.valid ? 'is-invalid' : 'is-valid' : null" 
     [type]="type" (input)="onChange($event.target.value)" (blur)="onTouched()" placeholder="{{label}}" class="form-control" id="{{label}}" #input >
 
@@ -14,4 +14,45 @@
             <span *ngIf="controlDir.control.errors?.['emailExists']">Email address is in use</span>
         </div>
     </div>
-  </div>
+  </div> -->
+
+
+  @let control = controlDir.control;
+
+<div class="form-floating mb-2">
+  <input
+    class="form-control"
+    [id]="label()"
+    [type]="type()"
+    [value]="value()"
+    [disabled]="disabled()"
+    [placeholder]="label()"
+    [class.is-invalid]="control?.touched && control?.invalid"
+    [class.is-valid]="control?.touched && control?.valid"
+    (input)="onInput($event)"
+    (blur)="onTouched()"
+  />
+
+  @if (control?.status === 'PENDING') {
+    <div class="fa fa-spinner fa-spin loader"></div>
+  }
+
+  <label [for]="label()">{{ label() }}</label>
+
+  @if (control?.invalid && control?.touched) {
+    <div class="invalid-feedback">
+      @if (control?.errors?.['required']) {
+        <span>Поле «{{ label() }}» обязательно для заполнения</span>
+      }
+      @if (control?.errors?.['pattern']) {
+        <span>Некорректный адрес электронной почты</span>
+      }
+
+      @if (control?.dirty && control?.errors?.['emailExists']) {
+        <div class="invalid-feedback d-block">
+          <span>Этот адрес электронной почты уже используется</span>
+        </div>
+      }
+    </div>
+  }
+</div>

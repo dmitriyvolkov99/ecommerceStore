@@ -1,15 +1,29 @@
-import { HttpEvent, HttpHandler, HttpHandlerFn, HttpInterceptor, HttpRequest } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { HttpInterceptorFn } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
-export function jwtInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
-    const token = localStorage.getItem('token');
-    console.log('INLINE INTERCEPTOR RUNNING, token=', token);
-    if (token) {
-        req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` }});
-    }
+export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
+  // Токен отправляем только на наш API, чтобы не светить его сторонним сервисам
+  if (!req.url.startsWith(environment.apiUrl)) {
     return next(req);
-}
+  }
+
+  const token = localStorage.getItem('token');
+  if (token) {
+    req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+  }
+
+  return next(req);
+};
+
+
+// export function jwtInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
+//     const token = localStorage.getItem('token');
+//     console.log('INLINE INTERCEPTOR RUNNING, token=', token);
+//     if (token) {
+//         req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` }});
+//     }
+//     return next(req);
+// }
 
 
 // @Injectable({

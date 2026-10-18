@@ -1,36 +1,25 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faCartPlus } from '@fortawesome/free-solid-svg-icons';
 import { IProduct } from '../../_models/product';
 import { BasketService } from '../../_services/basket-service';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { faCartPlus } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-
 
 @Component({
   selector: 'app-product-item',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    FontAwesomeModule
-  ],
+  imports: [CurrencyPipe, RouterLink, FontAwesomeModule],
   templateUrl: './product-item.html',
   styleUrl: './product-item.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductItem {
-  @Input() product!: IProduct;
-  faCartPlus = faCartPlus;
+  private readonly basketService = inject(BasketService);
 
-  constructor(private basketService: BasketService) { }
+  readonly product = input.required<IProduct>();
+  protected readonly faCartPlus = faCartPlus;
 
-  ngOnInit(): void {
-  }
-
-  addItemToBasket(){
-    this.basketService.addItemToBasket(this.product);
+  addItemToBasket() {
+    this.basketService.addItemToBasket(this.product());
   }
 }
