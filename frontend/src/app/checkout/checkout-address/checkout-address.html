@@ -1,33 +1,19 @@
-<div class="mt-4" [formGroup]="checkoutForm()">
-  <div class="d-flex justify-content-between align-items-center">
-    <h4>Адрес доставки</h4>
-    <button
-      (click)="saveUserAddress()"
-      [disabled]="addressForm().invalid || !addressForm().dirty"
-      class="btn btn-outline-success mb-3"
-    >
+<section class="rounded-3xl border border-line bg-white p-5 md:p-7" [formGroup]="checkoutForm()">
+  <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-xl font-extrabold tracking-tight">Адрес доставки</h2>
+    <button type="button" (click)="saveUserAddress()"
+            [disabled]="addressForm().invalid || !addressForm().dirty"
+            class="cursor-pointer self-start rounded-xl border border-line px-4 py-2.5 text-sm font-bold transition hover:bg-ground disabled:cursor-not-allowed disabled:opacity-40">
       Сохранить как адрес по умолчанию
     </button>
   </div>
 
-  <div class="row" formGroupName="addressForm">
-    <div class="form-group col-6">
-      <app-text-input label="Имя" formControlName="firstName"></app-text-input>
-    </div>
-    <div class="form-group col-6">
-      <app-text-input label="Фамилия" formControlName="lastName"></app-text-input>
-    </div>
-    <div class="form-group col-6">
-      <app-text-input label="Улица" formControlName="street"></app-text-input>
-    </div>
-    <div class="form-group col-6">
-      <app-text-input label="Город" formControlName="city"></app-text-input>
-    </div>
-    <div class="form-group col-6">
-      <app-text-input label="Область" formControlName="state"></app-text-input>
-    </div>
-    <div class="form-group col-6">
-      <app-text-input label="Почтовый индекс" formControlName="zipCode"></app-text-input>
-    </div>
+  <div class="grid gap-4 sm:grid-cols-2" formGroupName="addressForm">
+    <app-text-input label="Имя" formControlName="firstName" />
+    <app-text-input label="Фамилия" formControlName="lastName" />
+    <app-text-input label="Улица" formControlName="street" />
+    <app-text-input label="Город" formControlName="city" />
+    <app-text-input label="Область" formControlName="state" />
+    <app-text-input label="Почтовый индекс" formControlName="zipCode" />
   </div>
-</div>
+</section>

@@ -1,38 +1,39 @@
-<div class="mt-4" [formGroup]="checkoutForm()">
-  <div class="row">
-    <div class="form-group col-12" formGroupName="paymentForm">
-      <app-text-input label="Имя на карте" formControlName="nameOnCard"></app-text-input>
+<section class="rounded-3xl border border-line bg-white p-5 md:p-7" [formGroup]="checkoutForm()">
+  <h2 class="mb-5 text-xl font-extrabold tracking-tight">Оплата</h2>
+
+  <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="col-span-full" formGroupName="paymentForm">
+      <app-text-input label="Имя на карте" formControlName="nameOnCard" />
     </div>
-    <div class="form-group col-6">
-      <div #cardNumber class="form-control py-3"></div>
+
+    <div class="col-span-2">
+      <span class="mb-1.5 block text-sm font-bold">Номер карты</span>
+      <div #cardNumber class="h-12 rounded-xl border border-line bg-white px-3.5 py-3.5"></div>
       @if (cardErrors(); as error) {
-        <span class="text-danger">{{ error }}</span>
+        <span class="mt-1 block text-sm text-red-600">{{ error }}</span>
       }
     </div>
-    <div class="form-group col-3">
-      <div #cardExpiry class="form-control py-3"></div>
+    <div class="col-span-1">
+      <span class="mb-1.5 block text-sm font-bold">Срок</span>
+      <div #cardExpiry class="h-12 rounded-xl border border-line bg-white px-3.5 py-3.5"></div>
     </div>
-    <div class="form-group col-3">
-      <div #cardCvc class="form-control py-3"></div>
+    <div class="col-span-1">
+      <span class="mb-1.5 block text-sm font-bold">CVC</span>
+      <div #cardCvc class="h-12 rounded-xl border border-line bg-white px-3.5 py-3.5"></div>
     </div>
   </div>
-</div>
 
-<div class="float-none d-flex justify-content-between flex-column flex-lg-row mb-5">
-  <button
-    class="btn btn-primary"
-    [disabled]="
-      loading() ||
-      checkoutForm().get('paymentForm')?.invalid ||
-      !cardNumberValid() ||
-      !cardExpiryValid() ||
-      !cardCvcValid()
-    "
-    (click)="submitOrder()"
-  >
-    Оформить заказ <i class="fa fa-anle-right"></i>
-    @if (loading()) {
-      <i class="fa fa-spinner fa-spin"></i>
-    }
-  </button>
-</div>
+  <div class="mt-6 flex justify-end">
+    <button type="button" (click)="submitOrder()"
+            [disabled]="loading() || checkoutForm().get('paymentForm')?.invalid || !cardNumberValid() || !cardExpiryValid() || !cardCvcValid()"
+            class="flex h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-accent px-8 text-base font-extrabold text-ink transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
+      Оформить заказ
+      @if (loading()) {
+        <svg class="size-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity="0.25" />
+          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+        </svg>
+      }
+    </button>
+  </div>
+</section>

@@ -1,91 +1,86 @@
-<div class="container mt-5">
-  <div class="row">
-    <section class="col-3">
-      <h5 class="text-warning ml-3">Сортировка</h5>
-      <select #sortSelect class="custom-select mb-3" (change)="onSortSelected(sortSelect.value)">
+<div class="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
+  <!-- Фильтры -->
+  <aside class="flex flex-col gap-5">
+    <div>
+      <h2 class="mb-2 text-sm font-bold uppercase tracking-wide text-mute">Сортировка</h2>
+      <select #sortSelect (change)="onSortSelected(sortSelect.value)"
+              class="h-12 w-full rounded-xl border border-line bg-white px-3 font-medium">
         @for (sort of sortOptions; track sort.value) {
-          <option [value]="sort.value" [selected]="shopParams.sort === sort.value">
-            {{ sort.name }}
-          </option>
+          <option [value]="sort.value" [selected]="shopParams.sort === sort.value">{{ sort.name }}</option>
         }
       </select>
+    </div>
 
-      @if (filtersLoading()) {
-        <div>Загрузка фильтров…</div>
-      } @else {
-        <h5 class="text-warning ml-3">Бренды</h5>
-        <ul class="list-group my-3">
+    @if (filtersLoading()) {
+      <div class="animate-pulse text-mute">Загрузка фильтров…</div>
+    } @else {
+      <div>
+        <h2 class="mb-2 text-sm font-bold uppercase tracking-wide text-mute">Бренды</h2>
+        <ul class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0">
           @for (brand of brands(); track brand.id) {
-            <li
-              class="list-group-item"
-              [class.active]="brand.id === shopParams.brandId"
-              (click)="onBrandSelected(brand.id)"
-            >
-              {{ brand.name }}
+            <li class="shrink-0">
+              <button type="button" (click)="onBrandSelected(brand.id)"
+                      [class]="brand.id === shopParams.brandId
+                        ? 'bg-ink text-white font-bold'
+                        : 'bg-white text-ink hover:bg-line'"
+                      class="w-full cursor-pointer whitespace-nowrap rounded-full border border-line px-4 py-2 text-left lg:rounded-xl">
+                {{ brand.name }}
+              </button>
             </li>
           }
         </ul>
-
-        <h5 class="text-warning ml-3">Типы</h5>
-        <ul class="list-group my-3">
-          @for (type of types(); track type.id) {
-            <li
-              class="list-group-item"
-              [class.active]="type.id === shopParams.typeId"
-              (click)="onTypeSelected(type.id)"
-            >
-              {{ type.name }}
-            </li>
-          }
-        </ul>
-      }
-    </section>
-
-    <section class="col-9">
-      <div class="d-flex justify-content-between align-items-center pb-2">
-        <app-paging-header
-          [totalCount]="totalCount()"
-          [pageSize]="shopParams.pageSize"
-          [pageNumber]="shopParams.pageNumber"
-        ></app-paging-header>
-
-        <div class="form-inline mt-2">
-          <input
-            #search
-            (keyup.enter)="onSearch()"
-            [value]="shopParams.search"
-            class="form-control mr-2"
-            style="width: 300px;"
-            placeholder="Поиск"
-            type="text"
-          />
-          <button class="btn btn-outline-primary my-2" (click)="onSearch()">Найти</button>
-          <button class="btn btn-outline-success ml-2 my-2" (click)="onReset()">Сбросить</button>
-        </div>
       </div>
 
-      @if (productsLoading()) {
-        <div>Загрузка товаров…</div>
-      } @else {
-        <div class="row">
-          @for (item of products(); track item.id) {
-            <div class="col-4 mb-4">
-              <app-product-item [product]="item"></app-product-item>
-            </div>
+      <div>
+        <h2 class="mb-2 text-sm font-bold uppercase tracking-wide text-mute">Типы</h2>
+        <ul class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0">
+          @for (type of types(); track type.id) {
+            <li class="shrink-0">
+              <button type="button" (click)="onTypeSelected(type.id)"
+                      [class]="type.id === shopParams.typeId
+                        ? 'bg-ink text-white font-bold'
+                        : 'bg-white text-ink hover:bg-line'"
+                      class="w-full cursor-pointer whitespace-nowrap rounded-full border border-line px-4 py-2 text-left lg:rounded-xl">
+                {{ type.name }}
+              </button>
+            </li>
           }
-        </div>
+        </ul>
+      </div>
+    }
+  </aside>
 
-        @if (totalCount() > 0) {
-          <div class="d-flex justify-content-center">
-            <app-pager
-              [pageSize]="shopParams.pageSize"
-              [totalCount]="totalCount()"
-              [pageNumber]="shopParams.pageNumber"
-              (pageChanged)="onPageChanged($event)"
-            ></app-pager>
-          </div>
+  <!-- Товары -->
+  <section class="min-w-0">
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex gap-2">
+        <input #search type="text" placeholder="Поиск" [value]="shopParams.search"
+               (keyup.enter)="onSearch()"
+               class="h-12 min-w-0 flex-1 rounded-xl border border-line bg-white px-4 sm:w-72 sm:flex-none" />
+        <button type="button" (click)="onSearch()"
+                class="h-12 cursor-pointer rounded-xl bg-ink px-5 font-bold text-white">Найти</button>
+        <button type="button" (click)="onReset()"
+                class="h-12 cursor-pointer rounded-xl border border-line bg-white px-4 font-semibold">Сбросить</button>
+      </div>
+      <app-paging-header class="text-sm text-mute"
+        [totalCount]="totalCount()" [pageSize]="shopParams.pageSize" [pageNumber]="shopParams.pageNumber" />
+    </div>
+
+    @if (productsLoading()) {
+      <div class="animate-pulse py-10 text-center text-mute">Загрузка товаров…</div>
+    } @else {
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+        @for (item of products(); track item.id) {
+          <app-product-item [product]="item" />
         }
+      </div>
+
+      @if (totalCount() > 0) {
+        <div class="mt-8 flex justify-center">
+          <app-pager [pageSize]="shopParams.pageSize" [totalCount]="totalCount()"
+                     [pageNumber]="shopParams.pageNumber" (pageChanged)="onPageChanged($event)" />
+        </div>
       }
-    </section>
-  </div>
+    }
+  </section>
 </div>

@@ -1,3 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", system-ui, sans-serif;
+  --color-ink: #12151a;
+  --color-ground: #f4f5f7;
+  --color-line: #e4e7ec;
+  --color-mute: #5b6472;
+  --color-accent: #ff5a1f;
+}
+
+@layer base {
+  body {
+    @apply bg-ground font-sans text-ink antialiased;
+  }
+}

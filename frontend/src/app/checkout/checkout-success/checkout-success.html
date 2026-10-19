@@ -1,13 +1,17 @@
-<div class="container mt-5">
-  <div><i class="fa fa-check-circle fa-5x" style="color: green;"></i></div>
-  <h2>Спасибо! Ваш заказ подтверждён</h2>
-  <p class="mb-4">
-    Заказ пока не отправлен — это нормально, ведь мы настоящий магазин
-  </p>
+<div class="mx-auto mt-6 flex max-w-xl flex-col items-center gap-4 rounded-3xl border border-line bg-white p-8 text-center md:p-12">
+  <div class="flex size-[72px] items-center justify-center rounded-full bg-green-100 text-green-700">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg>
+  </div>
+  <h1 class="text-3xl font-extrabold tracking-tight">Спасибо за заказ!</h1>
+  <p class="text-mute">Ваш заказ подтверждён. Мы пока ничего не отправляем — это учебный магазин.</p>
 
-  @if (order; as order) {
-    <button [routerLink]="['/orders', order.id]" class="btn btn-outline-success">Посмотреть заказ</button>
-  } @else {
-    <button routerLink="/orders" class="btn btn-outline-success">Посмотреть мои заказы</button>
-  }
+  <div class="mt-2 flex flex-wrap justify-center gap-3">
+    @if (order; as order) {
+      <a [routerLink]="['/orders', order.id]" class="flex h-12 items-center rounded-2xl bg-ink px-6 font-bold text-white">Посмотреть заказ</a>
+    } @else {
+      <a routerLink="/orders" class="flex h-12 items-center rounded-2xl bg-ink px-6 font-bold text-white">Мои заказы</a>
+    }
+    <a routerLink="/shop" class="flex h-12 items-center rounded-2xl border border-line px-6 font-bold">В каталог</a>
+  </div>
 </div>

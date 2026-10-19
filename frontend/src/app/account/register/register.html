@@ -1,21 +1,29 @@
-<div class="d-flex justify-content-center text-center">
-  <div class="col-3">
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <h1 class="h3 mb-3 fw-normal">Регистрация</h1>
+<div class="mx-auto mt-4 w-full max-w-md rounded-3xl border border-line bg-white p-6 md:mt-10 md:p-9">
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight">Регистрация</h1>
+      <p class="mt-1 text-mute">Создайте аккаунт за минуту</p>
+    </div>
 
-      <app-text-input formControlName="displayName" label="Имя"></app-text-input>
-      <app-text-input formControlName="email" label="Адрес электронной почты"></app-text-input>
-      <app-text-input formControlName="password" label="Пароль" type="password"></app-text-input>
+    <app-text-input formControlName="displayName" label="Имя" />
+    <app-text-input formControlName="email" label="Адрес электронной почты" />
+    <app-text-input formControlName="password" label="Пароль" type="password" />
 
-      @if (errors().length > 0) {
-        <ul class="text-danger list-unstyled">
-          @for (error of errors(); track $index) {
-            <li>{{ error }}</li>
-          }
-        </ul>
-      }
+    @if (errors().length > 0) {
+      <ul class="flex flex-col gap-1 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+        @for (error of errors(); track $index) {
+          <li>{{ error }}</li>
+        }
+      </ul>
+    }
 
-      <button class="w-100 btn btn-lg btn-primary" type="submit">Зарегистрироваться</button>
-    </form>
-  </div>
+    <button type="submit"
+            class="h-13 cursor-pointer rounded-2xl bg-ink px-6 py-3.5 font-extrabold text-white transition hover:bg-accent hover:text-ink">
+      Зарегистрироваться
+    </button>
+
+    <p class="text-center text-mute">
+      Уже есть аккаунт? <a routerLink="/account/login" class="font-bold text-ink underline">Войти</a>
+    </p>
+  </form>
 </div>

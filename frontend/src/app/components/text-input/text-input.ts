@@ -34,7 +34,6 @@ export class TextInput implements ControlValueAccessor, OnInit {
   }
 
   ngOnInit(): void {
-    // Без zone.js результат async-валидатора сам по себе перерисовку не запускает
     this.controlDir.control?.events
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.cdr.markForCheck());

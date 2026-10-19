@@ -1,5 +1,29 @@
-<section class="featured">
-    <div class="d-flex justify-content-center pt-4">
-        <h1>Welcome to the Shop!</h1>
+<section class="flex flex-col gap-10">
+  <div class="overflow-hidden rounded-[28px] bg-ink p-8 text-white md:p-14">
+    <span class="inline-block rounded-full bg-accent px-3.5 py-1.5 text-sm font-extrabold text-ink">Новая коллекция</span>
+    <h1 class="mt-5 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-tight md:text-6xl">
+      Техника, которая работает на вас
+    </h1>
+    <p class="mt-5 max-w-lg text-lg text-slate-300">
+      Смартфоны, ноутбуки, наушники и умные часы в одном месте. Выбирайте и оформляйте заказ за пару минут.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a routerLink="/shop" class="flex h-13 items-center rounded-2xl bg-accent px-7 py-3.5 text-base font-extrabold text-ink">Перейти в каталог</a>
     </div>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-3 md:gap-5">
+    <div class="rounded-2xl border border-line bg-white p-6">
+      <div class="mb-1.5 text-lg font-extrabold tracking-tight">Доставка</div>
+      <div class="text-mute">Выберите удобный способ при оформлении заказа.</div>
+    </div>
+    <div class="rounded-2xl border border-line bg-white p-6">
+      <div class="mb-1.5 text-lg font-extrabold tracking-tight">Гарантия</div>
+      <div class="text-mute">Вся техника с гарантией производителя.</div>
+    </div>
+    <div class="rounded-2xl border border-line bg-white p-6">
+      <div class="mb-1.5 text-lg font-extrabold tracking-tight">Поддержка</div>
+      <div class="text-mute">Поможем выбрать и ответим на вопросы по заказу.</div>
+    </div>
+  </div>
 </section>

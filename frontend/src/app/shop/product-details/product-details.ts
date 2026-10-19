@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { IProduct } from '../../_models/product';
 import { BasketService } from '../../_services/basket-service';
@@ -9,7 +9,7 @@ import { ShopService } from '../../_services/shop-service';
 
 @Component({
   selector: 'app-product-details',
-  imports: [CurrencyPipe],
+  imports: [CurrencyPipe, RouterLink],
   templateUrl: './product-details.html',
   styleUrl: './product-details.css',
 })
@@ -19,7 +19,6 @@ export class ProductDetails {
 
   protected readonly quantity = signal(1);
 
-  // undefined — идёт загрузка, null — товар не найден или произошла ошибка
   protected readonly product = toSignal(
     inject(ActivatedRoute).paramMap.pipe(
       map(params => Number(params.get('id'))),

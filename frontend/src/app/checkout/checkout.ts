@@ -39,7 +39,6 @@ export class Checkout {
   constructor() {
     this.loadAddress();
 
-    // Корзина может догрузиться уже после открытия страницы, поэтому следим за сигналом
     effect(() => {
       const deliveryMethodId = this.basketService.basket()?.deliveryMethodId;
       if (deliveryMethodId) {

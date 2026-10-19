@@ -1,6 +1,7 @@
 import {
   ApplicationConfig,
   inject,
+  LOCALE_ID,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
@@ -13,9 +14,13 @@ import { jwtInterceptor } from './_interceptors/jwt-interceptor';
 import { loadingInterceptor } from './_interceptors/loading-interceptor';
 import { AccountService } from './_services/account-service';
 import { BasketService } from './_services/basket-service';
+import { registerLocaleData } from '@angular/common';
+import localeRu from '@angular/common/locales/ru';
+registerLocaleData(localeRu);
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: LOCALE_ID, useValue: 'ru' },
     // Angular 21: zoneless по умолчанию, provideZonelessChangeDetection() не нужен
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),

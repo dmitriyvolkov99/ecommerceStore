@@ -1,71 +1,43 @@
-<div class="container mt-5">
-  @if (order(); as o) {
-    <div class="row">
-      <div class="col-8">
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col" class="border-0 bg-light">
-                  <div class="p-2 text-uppercase">Товар</div>
-                </th>
-                <th scope="col" class="border-0 bg-light">
-                  <div class="py-2 text-uppercase">Цена</div>
-                </th>
-                <th scope="col" class="border-0 bg-light">
-                  <div class="py-2 text-uppercase">Количество</div>
-                </th>
-                <th scope="col" class="border-0 bg-light">
-                  <div class="py-2 text-uppercase">Сумма</div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of o.orderItems; track $index) {
-                <tr>
-                  <th scope="row">
-                    <div class="p-2">
-                      <img [src]="item.pictureUrl" [alt]="item.productName" class="img-fluid" style="max-height: 50px" />
-                      <div class="ml-3 d-inline-block align-middle">
-                        <h5 class="mb-0">{{ item.productName }}</h5>
-                      </div>
-                    </div>
-                  </th>
-                  <td class="align-middle"><strong>{{ item.price | currency }}</strong></td>
-                  <td class="align-middle">
-                    <span class="font-weight-bold px-2">{{ item.quantity }}</span>
-                  </td>
-                  <td class="align-middle"><strong>{{ item.price * item.quantity | currency }}</strong></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
+@if (order(); as o) {
+  <a routerLink="/orders" class="font-semibold text-mute hover:text-ink">← Все заказы</a>
+  <h1 class="mb-6 mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Заказ № {{ o.id }}</h1>
 
-      <div class="col-4">
-        <div class="bg-light px-4 py-3 text-uppercase font-weight-bold">Сумма заказа</div>
-        <div class="p-4">
-          <ul class="list-unstyled mb-1">
-            <li class="d-flex justify-content-between py-3 border-bottom">
-              <strong class="text-muted">Сумма товаров</strong>
-              <strong>{{ o.subtotal | currency }}</strong>
-            </li>
-            <li class="d-flex justify-content-between py-3 border-bottom">
-              <strong class="text-muted">Доставка и обработка</strong>
-              <strong>{{ o.shippingPrice | currency }}</strong>
-            </li>
-            <li class="d-flex justify-content-between py-3 border-bottom">
-              <strong class="text-muted">Итого</strong>
-              <strong>{{ o.total | currency }}</strong>
-            </li>
-          </ul>
+  <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+    <ul class="divide-y divide-line rounded-3xl border border-line bg-white px-4 md:px-6">
+      @for (item of o.orderItems; track $index) {
+        <li class="flex items-center gap-4 py-4">
+          <div class="flex size-16 shrink-0 items-center justify-center rounded-xl bg-ground p-1.5 md:size-20">
+            <img [src]="item.pictureUrl" [alt]="item.productName" class="max-h-full max-w-full object-contain mix-blend-multiply" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-bold">{{ item.productName }}</div>
+            <div class="text-sm text-mute">
+              {{ item.quantity }} × {{ item.price | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}
+            </div>
+          </div>
+          <strong class="whitespace-nowrap">{{ item.price * item.quantity | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </li>
+      }
+    </ul>
+
+    <div class="rounded-3xl border border-line bg-white p-6">
+      <h2 class="text-lg font-extrabold tracking-tight">Сумма заказа</h2>
+      <dl class="mt-4 flex flex-col gap-3">
+        <div class="flex justify-between text-mute">
+          <dt>Товары</dt><dd class="font-semibold text-ink">{{ o.subtotal | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</dd>
         </div>
-      </div>
+        <div class="flex justify-between text-mute">
+          <dt>Доставка</dt><dd class="font-semibold text-ink">{{ o.shippingPrice | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</dd>
+        </div>
+        <div class="h-px bg-line"></div>
+        <div class="flex justify-between text-xl font-extrabold">
+          <dt>Итого</dt><dd>{{ o.total | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</dd>
+        </div>
+      </dl>
     </div>
-  } @else if (order() === null) {
-    <p>Заказ не найден</p>
-  } @else {
-    <p>Загрузка заказа…</p>
-  }
-</div>
+  </div>
+} @else if (order() === null) {
+  <p class="py-10 text-center text-mute">Заказ не найден</p>
+} @else {
+  <p class="animate-pulse py-10 text-center text-mute">Загрузка заказа…</p>
+}

@@ -1,7 +1,11 @@
-<div class="mt-4">
-  <app-basket-summary [isBasket]="false"></app-basket-summary>
-</div>
+<section class="rounded-3xl border border-line bg-white p-5 md:p-7">
+  <h2 class="mb-2 text-xl font-extrabold tracking-tight">Состав заказа</h2>
+  <app-basket-summary [isBasket]="false" />
 
-<button class="btn btn-primary" (click)="createPaymentIntent()">
-  Перейти к оплате <i class="fa fa-anle-right"></i>
-</button>
+  <div class="mt-5 flex justify-end">
+    <button type="button" (click)="createPaymentIntent()"
+            class="h-12 w-full cursor-pointer rounded-2xl bg-ink px-6 font-extrabold text-white transition hover:bg-accent hover:text-ink sm:w-auto">
+      Перейти к оплате →
+    </button>
+  </div>
+</section>

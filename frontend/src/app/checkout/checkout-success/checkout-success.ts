@@ -9,7 +9,6 @@ import { IOrder } from '../../_models/order';
   styleUrl: './checkout-success.css',
 })
 export class CheckoutSuccess {
-  // Заказ приходит через state навигации; в конструкторе/инициализаторе поля он ещё доступен
   protected readonly order = inject(Router).currentNavigation()?.extras.state as
     | IOrder
     | undefined;

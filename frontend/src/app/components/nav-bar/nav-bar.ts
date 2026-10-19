@@ -1,23 +1,34 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
-import { BasketService } from '../../_services/basket-service';
 import { AccountService } from '../../_services/account-service';
+import { BasketService } from '../../_services/basket-service';
 
 @Component({
   selector: 'app-nav-bar',
-  imports: [RouterLink, RouterLinkActive, BsDropdownModule],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './nav-bar.html',
-  styleUrl: './nav-bar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavBar {
-  private readonly accountService = inject(AccountService);
+  protected readonly accountService = inject(AccountService);
+  protected readonly basketService = inject(BasketService);
 
-  protected readonly basket = inject(BasketService).basket;
-  protected readonly currentUser = this.accountService.currentUser;
+  protected readonly menuOpen = signal(false);
 
-  logout() {
+  protected readonly initial = computed(
+    () => this.accountService.currentUser()?.displayName?.charAt(0).toUpperCase() ?? '',
+  );
+
+  protected toggleMenu() {
+    this.menuOpen.update(v => !v);
+  }
+
+  protected closeMenu() {
+    this.menuOpen.set(false);
+  }
+
+  protected logout() {
+    this.closeMenu();
     this.accountService.logout();
   }
 }

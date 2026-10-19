@@ -1,14 +1,14 @@
-<div class="container mt-5">
-  <div class="row">
-    <div class="col-8">
-      <app-checkout-address [checkoutForm]="checkoutForm"></app-checkout-address>
-      <app-checkout-delivery [checkoutForm]="checkoutForm"></app-checkout-delivery>
-      <app-checkout-review></app-checkout-review>
-      <app-checkout-payment [checkoutForm]="checkoutForm"></app-checkout-payment>
-    </div>
+<h1 class="mb-6 text-3xl font-extrabold tracking-tight md:text-4xl">Оформление заказа</h1>
 
-    <div class="col-4">
-      <app-order-totals></app-order-totals>
-    </div>
+<div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+  <div class="flex flex-col gap-6">
+    <app-checkout-address [checkoutForm]="checkoutForm" />
+    <app-checkout-delivery [checkoutForm]="checkoutForm" />
+    <app-checkout-review />
+    <app-checkout-payment [checkoutForm]="checkoutForm" />
+  </div>
+
+  <div class="lg:sticky lg:top-24">
+    <app-order-totals />
   </div>
 </div>

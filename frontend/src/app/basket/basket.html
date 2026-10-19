@@ -1,28 +1,25 @@
-<div class="container mt-5">
-  @if (basket()) {
-    <div class="pb-5">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 py-5 mb-1">
-            <app-basket-summary
-              (decrement)="decrementItemQuantity($event)"
-              (increment)="incrementItemQuantity($event)"
-              (remove)="removeBasketItem($event)"
-            ></app-basket-summary>
-          </div>
-        </div>
+@if (basket(); as basket) {
+  <h1 class="mb-6 text-3xl font-extrabold tracking-tight md:text-4xl">Корзина</h1>
 
-        <div class="row">
-          <div class="col-6 offset-6">
-            <app-order-totals></app-order-totals>
-            <a routerLink="/checkout" class="btn btn-outline-primary py-2 btn-block">
-              Перейти к оформлению заказа
-            </a>
-          </div>
-        </div>
-      </div>
+  <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+    <app-basket-summary
+      (decrement)="decrementItemQuantity($event)"
+      (increment)="incrementItemQuantity($event)"
+      (remove)="removeBasketItem($event)"
+    />
+
+    <div class="flex flex-col gap-4 lg:sticky lg:top-24">
+      <app-order-totals />
+      <a routerLink="/checkout"
+         class="flex h-13 items-center justify-center rounded-2xl bg-ink px-6 py-3.5 text-base font-extrabold text-white transition hover:bg-accent hover:text-ink">
+        Перейти к оформлению
+      </a>
     </div>
-  } @else {
-    <p>В вашей корзине нет товаров</p>
-  }
-</div>
+  </div>
+} @else {
+  <div class="mx-auto mt-10 max-w-md rounded-3xl border border-line bg-white p-10 text-center">
+    <h1 class="text-2xl font-extrabold tracking-tight">В корзине пока пусто</h1>
+    <p class="mt-2 text-mute">Загляните в каталог — там много интересного.</p>
+    <a routerLink="/shop" class="mt-6 inline-flex h-12 items-center rounded-2xl bg-ink px-6 font-bold text-white">В каталог</a>
+  </div>
+}

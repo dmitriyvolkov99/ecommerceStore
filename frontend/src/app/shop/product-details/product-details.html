@@ -1,32 +1,39 @@
 @if (product(); as product) {
-  <div class="row">
-    <div class="col-6">
-      <img [src]="product.pictureUrl" [alt]="product.name" class="img-fluid w-100" />
+  <a routerLink="/shop" class="font-semibold text-mute hover:text-ink">← Каталог</a>
+
+  <div class="mt-5 grid gap-6 md:grid-cols-2 md:gap-12">
+    <div class="flex aspect-square items-center justify-center rounded-3xl bg-white p-6 ring-1 ring-line">
+      <img [src]="product.pictureUrl" [alt]="product.name" class="max-h-full max-w-full object-contain" />
     </div>
 
-    <div class="col-6">
-      <h3>{{ product.name }}</h3>
-      <p>{{ product.price | currency }}</p>
+    <div class="flex flex-col gap-4">
+      <h1 class="text-3xl font-extrabold leading-tight tracking-tight md:text-4xl">{{ product.name }}</h1>
+      <div class="text-3xl font-extrabold tracking-tight">
+        {{ product.price | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}
+      </div>
 
-      <div class="d-flex justify-content-start align-items-center">
-        <i (click)="decrementQuantity()" class="fa fa-minus-circle text-warning mx-2" style="cursor: pointer; font-size: 2em"></i>
-        <span class="font-weight-bold" style="font-size: 1.5em;">{{ quantity() }}</span>
-        <i (click)="incrementQuantity()" class="fa fa-plus-circle text-warning mx-2" style="cursor: pointer; font-size: 2em"></i>
-        <button (click)="addItemToBasket(product)" class="btn btn-outline-primary btn-lg ml-4">
+      <div class="mt-2 flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-3">
+          <button type="button" (click)="decrementQuantity()" aria-label="Уменьшить количество"
+                  class="flex size-11 cursor-pointer items-center justify-center rounded-full border border-line bg-white text-xl font-extrabold hover:bg-line">−</button>
+          <span class="min-w-6 text-center text-xl font-extrabold">{{ quantity() }}</span>
+          <button type="button" (click)="incrementQuantity()" aria-label="Увеличить количество"
+                  class="flex size-11 cursor-pointer items-center justify-center rounded-full border border-line bg-white text-xl font-extrabold hover:bg-line">+</button>
+        </div>
+        <button type="button" (click)="addItemToBasket(product)"
+                class="h-13 min-w-48 flex-1 cursor-pointer rounded-2xl bg-ink px-8 py-3.5 text-base font-extrabold text-white transition hover:bg-accent hover:text-ink sm:flex-none">
           В корзину
         </button>
       </div>
-    </div>
 
-    <div class="row mt-5">
-      <div class="col-12 ml-3">
-        <h4>Описание</h4>
-        <p>{{ product.description }}</p>
+      <div class="mt-4 border-t border-line pt-5">
+        <h2 class="mb-2 text-lg font-extrabold">Описание</h2>
+        <p class="leading-relaxed text-mute">{{ product.description }}</p>
       </div>
     </div>
   </div>
 } @else if (product() === null) {
-  <p>Товар не найден</p>
+  <p class="py-10 text-center text-mute">Товар не найден</p>
 } @else {
-  <p>Загрузка товара…</p>
+  <p class="animate-pulse py-10 text-center text-mute">Загрузка товара…</p>
 }

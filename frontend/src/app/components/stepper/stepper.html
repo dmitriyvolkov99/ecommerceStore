@@ -1,13 +1,10 @@
-<div class="container">
-  <ul class="nav nav-pills nav-justified">
+<div>
+  <ul class="mb-6 flex gap-2 overflow-x-auto">
     @for (step of steps; track step; let i = $index) {
-      <li class="nav-item">
-        <button
-          (click)="onClick(i)"
-          [disabled]="true"
-          [class.active]="selectedIndex === i"
-          class="nav-link py-3 text-uppercase font-weight-bold btn-block"
-        >
+      <li class="flex-1">
+        <button type="button" (click)="onClick(i)" [disabled]="true"
+                [class]="selectedIndex === i ? 'bg-ink text-white' : 'bg-white text-mute'"
+                class="w-full whitespace-nowrap rounded-full border border-line px-4 py-3 text-sm font-bold uppercase tracking-wide">
           {{ step.label }}
         </button>
       </li>
@@ -15,6 +12,6 @@
   </ul>
 
   <div>
-    <ng-container [ngTemplateOutlet]="selected?.content"></ng-container>
+    <ng-container [ngTemplateOutlet]="selected?.content" />
   </div>
 </div>

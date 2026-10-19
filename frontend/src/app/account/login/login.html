@@ -1,18 +1,24 @@
-<div class="d-flex justify-content-center text-center">
-  <div class="col-3">
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <h1 class="h3 mb-3 fw-normal">Вход</h1>
+<div class="mx-auto mt-4 w-full max-w-md rounded-3xl border border-line bg-white p-6 md:mt-10 md:p-9">
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight">Вход</h1>
+      <p class="mt-1 text-mute">Войдите, чтобы оформить заказ</p>
+    </div>
 
-      <app-text-input formControlName="email" label="Адрес электронной почты"></app-text-input>
-      <app-text-input formControlName="password" label="Пароль" type="password"></app-text-input>
+    <app-text-input formControlName="email" label="Адрес электронной почты" />
+    <app-text-input formControlName="password" label="Пароль" type="password" />
 
-      @if (error(); as message) {
-        <p class="text-danger">{{ message }}</p>
-      }
+    @if (error(); as message) {
+      <p class="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{{ message }}</p>
+    }
 
-      <button [disabled]="loginForm.invalid" class="w-100 btn btn-lg btn-primary" type="submit">
-        Войти
-      </button>
-    </form>
-  </div>
+    <button type="submit" [disabled]="loginForm.invalid"
+            class="h-13 cursor-pointer rounded-2xl bg-ink px-6 py-3.5 font-extrabold text-white transition hover:bg-accent hover:text-ink disabled:cursor-not-allowed disabled:opacity-50">
+      Войти
+    </button>
+
+    <p class="text-center text-mute">
+      Нет аккаунта? <a routerLink="/account/register" class="font-bold text-ink underline">Зарегистрироваться</a>
+    </p>
+  </form>
 </div>

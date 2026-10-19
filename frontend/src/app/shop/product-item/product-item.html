@@ -1,20 +1,22 @@
-<div class="card h-100 shadow-sm">
-  <div class="image position-relative" style="cursor: pointer;">
-    <img [src]="product().pictureUrl" [alt]="product().name" class="img-fluid bg-light" />
-    <div class="d-flex align-items-center justify-content-center hover-overlay">
-      <button (click)="addItemToBasket()" type="button" class="btn btn-primary mr-2">
-        <fa-icon [icon]="faCartPlus" /> Купить
-      </button>
-      <button [routerLink]="['/shop', product().id]" type="button" class="btn btn-primary">
-        Детали
+<article class="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition hover:shadow-md">
+  <a [routerLink]="['/shop', product().id]" [attr.aria-label]="product().name + ' — подробнее'"
+     class="flex aspect-square items-center justify-center bg-ground p-4">
+    <img [src]="product().pictureUrl" [alt]="product().name" class="max-h-full max-w-full object-contain mix-blend-multiply" />
+  </a>
+
+  <div class="flex flex-1 flex-col gap-1 p-3 md:p-4">
+    <a [routerLink]="['/shop', product().id]" class="line-clamp-2 font-bold leading-snug tracking-tight md:text-[17px]">
+      {{ product().name }}
+    </a>
+    <div class="mt-auto flex items-center justify-between pt-3">
+      <span class="text-base font-extrabold tracking-tight md:text-xl">
+        {{ product().price | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}
+      </span>
+      <button type="button" (click)="addItemToBasket()" [attr.aria-label]="'Добавить ' + product().name + ' в корзину'"
+              class="flex size-10 cursor-pointer items-center justify-center rounded-full bg-ink text-white transition hover:bg-accent hover:text-ink md:size-11">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
     </div>
   </div>
-
-  <div class="card-body d-flex flex-column">
-    <a [routerLink]="['/shop', product().id]">
-      <h6 class="text-uppercase">{{ product().name }}</h6>
-    </a>
-    <span class="mb-2">{{ product().price | currency }}</span>
-  </div>
-</div>
+</article>

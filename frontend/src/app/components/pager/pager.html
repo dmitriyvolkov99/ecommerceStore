@@ -1,11 +1,17 @@
-<pagination
-  [boundaryLinks]="true"
-  [totalItems]="totalCount()"
-  [itemsPerPage]="pageSize()"
-  [ngModel]="pageNumber()"
-  (pageChanged)="onPagerChange($event)"
-  previousText="&lsaquo;"
-  nextText="&rsaquo;"
-  firstText="&laquo;"
-  lastText="&raquo;"
-></pagination>
+<nav aria-label="Страницы" class="flex items-center gap-1.5">
+  <button type="button" (click)="go(pageNumber() - 1)" [disabled]="pageNumber() <= 1" aria-label="Предыдущая"
+          class="size-10 cursor-pointer rounded-xl border border-line bg-white disabled:cursor-default disabled:opacity-40">‹</button>
+
+  @for (p of pages(); track $index) {
+    @if (p === null) {
+      <span class="px-1 text-mute">…</span>
+    } @else {
+      <button type="button" (click)="go(p)" [attr.aria-current]="p === pageNumber() ? 'page' : null"
+              [class]="p === pageNumber() ? 'bg-ink text-white font-bold' : 'bg-white hover:bg-line'"
+              class="size-10 cursor-pointer rounded-xl border border-line">{{ p }}</button>
+    }
+  }
+
+  <button type="button" (click)="go(pageNumber() + 1)" [disabled]="pageNumber() >= totalPages()" aria-label="Следующая"
+          class="size-10 cursor-pointer rounded-xl border border-line bg-white disabled:cursor-default disabled:opacity-40">›</button>
+</nav>

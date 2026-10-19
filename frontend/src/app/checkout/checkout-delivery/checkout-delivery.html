@@ -1,22 +1,18 @@
-<div class="mt-4" [formGroup]="checkoutForm()">
-  <h4 class="mb-3">Выберите способ доставки</h4>
+<section class="rounded-3xl border border-line bg-white p-5 md:p-7" [formGroup]="checkoutForm()">
+  <h2 class="mb-5 text-xl font-extrabold tracking-tight">Способ доставки</h2>
 
-  <div class="row ml-5" formGroupName="deliveryForm">
+  <div class="flex flex-col gap-3" formGroupName="deliveryForm">
     @for (method of deliveryMethods(); track method.id) {
-      <div class="col-6 form-group">
-        <input
-          type="radio"
-          (click)="setShippingPrice(method)"
-          id="{{ method.id }}"
-          value="{{ method.id }}"
-          formControlName="deliveryMethod"
-          class="custom-contrl-input"
-        />
-        <label for="{{ method.id }}" class="custom-control-label"></label>
-        <strong>{{ method.shortName }} - {{ method.price | currency }}</strong>
-        <br />
-        <span class="label-description">{{ method.description }}</span>
-      </div>
+      <label [for]="method.id"
+             class="flex cursor-pointer items-center gap-4 rounded-2xl border border-line p-4 transition hover:bg-ground has-checked:border-ink has-checked:ring-1 has-checked:ring-ink">
+        <input type="radio" (click)="setShippingPrice(method)" id="{{ method.id }}" value="{{ method.id }}"
+               formControlName="deliveryMethod" class="size-5 shrink-0 accent-ink" />
+        <span class="flex-1">
+          <span class="block font-bold">{{ method.shortName }}</span>
+          <span class="block text-sm text-mute">{{ method.description }}</span>
+        </span>
+        <strong class="whitespace-nowrap">{{ method.price | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</strong>
+      </label>
     }
   </div>
-</div>
+</section>

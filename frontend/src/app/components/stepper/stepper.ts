@@ -5,7 +5,6 @@ import { Component, forwardRef, input, OnInit } from '@angular/core';
 @Component({
   selector: 'app-stepper',
   imports: [NgTemplateOutlet],
-  // Без этого провайдера <cdk-step> не находит родительский степпер
   providers: [{ provide: CdkStepper, useExisting: forwardRef(() => Stepper) }],
   templateUrl: './stepper.html',
   styleUrl: './stepper.css',

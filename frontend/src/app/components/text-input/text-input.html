@@ -1,57 +1,38 @@
-<!-- <div class="form-floating mb-2">
-    <input [ngClass]="(controlDir && controlDir.control && controlDir.control.touched) ? !controlDir.control.valid ? 'is-invalid' : 'is-valid' : null" 
-    [type]="type" (input)="onChange($event.target.value)" (blur)="onTouched()" placeholder="{{label}}" class="form-control" id="{{label}}" #input >
+@let control = controlDir.control;
+@let invalid = !!control?.touched && !!control?.invalid;
 
-    <div *ngIf="(controlDir && controlDir.control && controlDir.control.status === 'PENDING')" class="fa fa-spinner fa-spin loader"></div>
-    
-    <label for="{{label}}">{{label}}</label>
-    
-    <div class="invalid-feedback" *ngIf="(controlDir && controlDir.control && !controlDir.control.valid && controlDir.control.touched)">
-        <span *ngIf="controlDir.control.errors?.['required']">{{label}} is required</span>
-        <span *ngIf="controlDir.control.errors?.['pattern']">Invalid email address</span>
+<div class="relative">
+  <label [for]="label()" class="mb-1.5 block text-sm font-bold">{{ label() }}</label>
 
-        <div class="invalid-feedback d-block" *ngIf="(controlDir && controlDir.control && !controlDir.control.valid && controlDir.control.dirty)">
-            <span *ngIf="controlDir.control.errors?.['emailExists']">Email address is in use</span>
-        </div>
-    </div>
-  </div> -->
-
-
-  @let control = controlDir.control;
-
-<div class="form-floating mb-2">
   <input
-    class="form-control"
     [id]="label()"
     [type]="type()"
     [value]="value()"
     [disabled]="disabled()"
-    [placeholder]="label()"
-    [class.is-invalid]="control?.touched && control?.invalid"
-    [class.is-valid]="control?.touched && control?.valid"
+    [attr.aria-invalid]="invalid"
+    [class]="invalid ? 'border-red-500' : (control?.touched && control?.valid ? 'border-green-500' : 'border-line')"
+    class="h-12 w-full rounded-xl border bg-white px-3.5 outline-none transition focus:ring-2 focus:ring-ink/20 disabled:bg-ground disabled:opacity-60"
     (input)="onInput($event)"
     (blur)="onTouched()"
   />
 
   @if (control?.status === 'PENDING') {
-    <div class="fa fa-spinner fa-spin loader"></div>
+    <svg class="absolute bottom-3.5 right-3.5 size-5 animate-spin text-mute" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity="0.25" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+    </svg>
   }
 
-  <label [for]="label()">{{ label() }}</label>
-
-  @if (control?.invalid && control?.touched) {
-    <div class="invalid-feedback">
+  @if (invalid) {
+    <div class="mt-1 text-sm text-red-600">
       @if (control?.errors?.['required']) {
         <span>Поле «{{ label() }}» обязательно для заполнения</span>
       }
       @if (control?.errors?.['pattern']) {
         <span>Некорректный адрес электронной почты</span>
       }
-
       @if (control?.dirty && control?.errors?.['emailExists']) {
-        <div class="invalid-feedback d-block">
-          <span>Этот адрес электронной почты уже используется</span>
-        </div>
+        <span>Этот адрес электронной почты уже используется</span>
       }
     </div>
   }

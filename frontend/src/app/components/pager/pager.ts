@@ -1,21 +1,36 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { PageChangedEvent, PaginationModule } from 'ngx-bootstrap/pagination';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-pager',
-  imports: [FormsModule, PaginationModule],
   templateUrl: './pager.html',
-  styleUrl: './pager.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pager {
-  readonly totalCount = input(0);
-  readonly pageSize = input(0);
-  readonly pageNumber = input(0);
+  readonly totalCount = input.required<number>();
+  readonly pageSize = input.required<number>();
+  readonly pageNumber = input.required<number>();
   readonly pageChanged = output<number>();
 
-  onPagerChange(event: PageChangedEvent) {
-    this.pageChanged.emit(event.page);
+  protected readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.totalCount() / this.pageSize())),
+  );
+
+  protected readonly pages = computed<(number | null)[]>(() => {
+    const total = this.totalPages();
+    const current = this.pageNumber();
+    const result: (number | null)[] = [];
+    for (let p = 1; p <= total; p++) {
+      if (p === 1 || p === total || Math.abs(p - current) <= 1) {
+        result.push(p);
+      } else if (result[result.length - 1] !== null) {
+        result.push(null);
+      }
+    }
+    return result;
+  });
+
+  protected go(page: number) {
+    if (page < 1 || page > this.totalPages() || page === this.pageNumber()) return;
+    this.pageChanged.emit(page);
   }
 }
