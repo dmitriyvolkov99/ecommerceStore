@@ -36,7 +36,6 @@ public class PaymentService(
             shippingPrice = deliveryMethod.Price;
         }
 
-        // Цены только из базы, а не из корзины клиента.
         var ids = basket.Items.Select(i => i.Id).Distinct().ToList();
         var products = await unitOfWork.Repository<Product>().ListAsync(new ProductsByIdsSpecification(ids));
         var prices = products.ToDictionary(p => p.Id, p => p.Price);
@@ -47,7 +46,6 @@ public class PaymentService(
 
         basket.ShippingPrice = shippingPrice;
 
-        // Сумма в центах, округляем корректно (в том числе доставку).
         var amount = (long)Math.Round(
             (basket.Items.Sum(i => i.Price * i.Quantity) + shippingPrice) * 100m,
             MidpointRounding.AwayFromZero);
@@ -98,7 +96,6 @@ public class PaymentService(
             .GetEntityWithSpec(new OrderByPaymentIntentIdSpecification(paymentIntentId));
         if (order is null) return null;
 
-        // Оплаченный заказ не переводим обратно в «ошибку».
         if (order.Status == OrderStatus.PaymentReceived) return order;
 
         order.Status = OrderStatus.PaymentFailed;

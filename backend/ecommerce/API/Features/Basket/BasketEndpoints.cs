@@ -32,7 +32,6 @@ public static class BasketEndpoints
     {
         var customerBasket = mapper.ToEntity(basket);
 
-        // Данные оплаты хранятся только на сервере, клиент их не подменяет.
         var existing = await basketRepository.GetBasketAsync(basket.Id);
         customerBasket.PaymentIntentId = existing?.PaymentIntentId;
         customerBasket.ClientSecret = existing?.ClientSecret;

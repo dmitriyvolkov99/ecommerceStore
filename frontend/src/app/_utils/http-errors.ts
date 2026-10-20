@@ -1,6 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-/** Список понятных сообщений из ответа сервера (ProblemDetails). */
 export function extractErrors(error: unknown): string[] {
   if (!(error instanceof HttpErrorResponse)) return ['Неизвестная ошибка'];
 

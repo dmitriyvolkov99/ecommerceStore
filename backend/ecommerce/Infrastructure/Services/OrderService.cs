@@ -18,14 +18,12 @@ public class OrderService(
     {
         var basket = await basketRepo.GetBasketAsync(basketId);
 
-        // Без корзины, товаров или платёжного намерения заказ создавать нельзя.
         if (basket is null || basket.Items.Count == 0 || string.IsNullOrEmpty(basket.PaymentIntentId))
             return null;
 
         var deliveryMethod = await unitOfWork.Repository<DeliveryMethod>().GetByIdAsync(deliveryMethodId);
         if (deliveryMethod is null) return null;
 
-        // Все товары одним запросом; одинаковые позиции корзины суммируем.
         var quantities = basket.Items
             .GroupBy(i => i.Id)
             .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
@@ -34,14 +32,12 @@ public class OrderService(
             .ListAsync(new ProductsByIdsSpecification(quantities.Keys.ToList()));
         if (products.Count != quantities.Count) return null;
 
-        // Цены только из базы, а не из корзины клиента.
         var items = products
             .Select(p => new OrderItem(
                 new ProductItemOrdered(p.Id, p.Name, p.PictureUrl), p.Price, quantities[p.Id]))
             .ToList();
         var subtotal = items.Sum(i => i.Price * i.Quantity);
 
-        // Заказ для этого платёжного намерения уже есть: неоплаченный заменяем, оплаченный не трогаем.
         var existingOrder = await unitOfWork.Repository<Order>()
             .GetEntityWithSpec(new OrderByPaymentIntentIdSpecification(basket.PaymentIntentId));
         if (existingOrder is not null)
@@ -52,7 +48,6 @@ public class OrderService(
             unitOfWork.Repository<Order>().Delete(existingOrder);
         }
 
-        // Сумма платежа должна совпадать с заказом: синхронизируем доставку и пересчитываем намерение.
         if (basket.DeliveryMethodId != deliveryMethodId)
         {
             basket.DeliveryMethodId = deliveryMethodId;

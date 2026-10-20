@@ -27,7 +27,7 @@ public partial class AppMapper
 
     [MapProperty("ProductBrand.Name", nameof(ProductToReturnDto.ProductBrand))]
     [MapProperty("ProductType.Name", nameof(ProductToReturnDto.ProductType))]
-    [MapperIgnoreTarget(nameof(ProductToReturnDto.PictureUrl))] // задаётся в ToDto
+    [MapperIgnoreTarget(nameof(ProductToReturnDto.PictureUrl))]
     private partial ProductToReturnDto MapProduct(Product product);
 
     // ---------- Корзина ----------
@@ -63,7 +63,7 @@ public partial class AppMapper
     [MapProperty("DeliveryMethod.ShortName", nameof(OrderToReturnDto.DeliveryMethod))]
     [MapProperty("DeliveryMethod.Price", nameof(OrderToReturnDto.ShippingPrice))]
     [MapProperty(nameof(Order.SubTotal), nameof(OrderToReturnDto.Subtotal))]
-    [MapperIgnoreTarget(nameof(OrderToReturnDto.Total))] // считается в ToDto
+    [MapperIgnoreTarget(nameof(OrderToReturnDto.Total))]
     private partial OrderToReturnDto MapOrder(Order order);
 
     [MapProperty("ItemOrdered.ProductItemId", nameof(OrderItemDto.ProductId))]
@@ -72,7 +72,6 @@ public partial class AppMapper
     private partial OrderItemDto MapOrderItem(OrderItem item);
 }
 
-// Вынесено из маппера намеренно: иначе Mapperly применил бы метод ко всем string-свойствам.
 file static class Urls
 {
     public static string Combine(string baseUrl, string? path) =>
