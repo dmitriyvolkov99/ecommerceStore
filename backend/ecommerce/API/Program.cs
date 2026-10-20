@@ -14,6 +14,11 @@ using StackExchange.Redis;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
+using API.Features.Products;
+
+using API.Features.Basket;
+using API.Features.Payments;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOutputCache(options =>
@@ -28,14 +33,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddTransient<ProductUrlResolver>();
-builder.Services.AddTransient<OrderItemUrlResolver>();
 builder.Services.AddSingleton<AppMapper>();
-
-//builder.Services.AddAutoMapper(cfg =>
-//{
-//    cfg.AddProfile<MappingProfiles>();
-//});
 
 builder.Services.AddControllers();
 
@@ -78,6 +76,8 @@ builder.Services.AddProblemDetails(options =>
             problem.Detail = context.Exception.ToString();
     };
 });
+
+builder.Services.AddValidation();
 
 builder.Services.AddIdentityServices(builder.Configuration);
 
@@ -164,6 +164,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseOutputCache();
+
+app.MapProducts();
+app.MapBasket();
+app.MapPayments();
 
 app.MapControllers();
 

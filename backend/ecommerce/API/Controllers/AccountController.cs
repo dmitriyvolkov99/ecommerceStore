@@ -1,7 +1,6 @@
 using API.Dtos;
 using API.Extensions;
 using API.Helpers;
-using AutoMapper;
 using Core.Entities.Identity;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
