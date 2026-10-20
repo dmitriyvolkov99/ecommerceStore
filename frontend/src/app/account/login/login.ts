@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AccountService } from '../../_services/account-service';
 import { TextInput } from '../../components/text-input/text-input';
+import { extractErrors } from '../../_utils/http-errors';
 
 @Component({
   selector: 'app-login',
@@ -34,8 +35,11 @@ export class Login {
     this.accountService.login(this.loginForm.getRawValue()).subscribe({
       next: () => this.router.navigateByUrl(this.returnUrl),
       error: err => {
-        console.error(err);
-        this.error.set('Не удалось войти. Проверьте адрес почты и пароль.');
+        this.error.set(
+          err.status === 429
+            ? extractErrors(err)[0]
+            : 'Не удалось войти. Проверьте адрес почты и пароль.',
+        );
       },
     });
   }

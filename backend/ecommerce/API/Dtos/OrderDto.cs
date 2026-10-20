@@ -1,9 +1,10 @@
-namespace API.Dtos
+using System.ComponentModel.DataAnnotations;
+
+namespace API.Dtos;
+
+public sealed record OrderDto
 {
-    public class OrderDto
-    {
-        public string BasketId { get; set; }
-        public int DeliveryMethodId { get; set; }
-        public AddressDto ShipToAddress { get; set; }
-    }
+    [Required] public required string BasketId { get; init; }
+    public int DeliveryMethodId { get; init; }
+    [Required] public required AddressDto ShipToAddress { get; init; }
 }

@@ -1,67 +1,53 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using API.Dtos;
 using API.Helpers;
-using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
 using Core.Specifications;
-using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.OutputCaching;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+public class ProductsController(
+    IGenericRepository<Product> productsRepo,
+    IGenericRepository<ProductBrand> productBrandRepo,
+    IGenericRepository<ProductType> productTypeRepo,
+    AppMapper mapper) : BaseApiController
 {
-    public class ProductsController : BaseApiController
+    [OutputCache(PolicyName = "Catalog")]
+    [HttpGet]
+    public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts(
+        [FromQuery] ProductsSpecParams productParams)
     {
-        private readonly IGenericRepository<Product> _productsRepo;
-        private readonly IGenericRepository<ProductBrand> _productBrandRepo;
-        private readonly IGenericRepository<ProductType> _productTypeRepo;
-        private readonly IMapper _mapper;
-        public ProductsController(IGenericRepository<Product> productsRepo, IGenericRepository<ProductBrand> productBrandRepo, IGenericRepository<ProductType> productTypeRepo, IMapper mapper)
-        {
-            _mapper = mapper;
-            _productTypeRepo = productTypeRepo;
-            _productBrandRepo = productBrandRepo;
-            _productsRepo = productsRepo;
-        }
+        var spec = new ProductsWithTypesAndBrandsSpecification(productParams);
+        var countSpec = new ProductsWithFiltersForCountSpecification(productParams);
 
-        [Cached(600)]
-        [HttpGet]
-        public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery] ProductsSpecParams productParams)
-        {
-            var spec = new ProductsWithTypesAndBrandsSpecification(productParams);
-            var countSpec = new ProductsWithFiltersForCountSpecification(productParams);
-            var totalItems = await _productsRepo.CountAsync(countSpec);
-            var products = await _productsRepo.ListAsync(spec);
-            var data = _mapper.Map<List<Product>, List<ProductToReturnDto>>(products);
-            return Ok(new Pagination<ProductToReturnDto>(productParams.PageIndex, productParams.PageSize, totalItems, data));
-        }
+        var totalItems = await productsRepo.CountAsync(countSpec);
+        var products = await productsRepo.ListAsync(spec);
 
-        [Cached(600)]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ProductToReturnDto>> GetProduct(int id)
-        {
-            var spec = new ProductsWithTypesAndBrandsSpecification(id);
-
-            var product = await _productsRepo.GetEntityWithSpec(spec);
-
-            return _mapper.Map<Product, ProductToReturnDto>(product);
-        }
-
-        [Cached(600)]
-        [HttpGet("brands")]
-        public async Task<ActionResult<IReadOnlyList<ProductBrand>>> GetProductBrands()
-        {
-            return Ok(await _productBrandRepo.ListAllAsync());
-        }
-
-        [Cached(600)]
-        [HttpGet("types")]
-        public async Task<ActionResult<IReadOnlyList<ProductType>>> GetProductTypes()
-        {
-            return Ok(await _productTypeRepo.ListAllAsync());
-        }
+        return Ok(new Pagination<ProductToReturnDto>(
+            productParams.PageIndex, productParams.PageSize, totalItems, mapper.ToDtos(products)));
     }
+
+    [OutputCache(PolicyName = "Catalog")]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ProductToReturnDto>> GetProduct(int id)
+    {
+        var spec = new ProductsWithTypesAndBrandsSpecification(id);
+
+        var product = await productsRepo.GetEntityWithSpec(spec);
+        if (product is null) return NotFound();
+
+        return mapper.ToDto(product);
+    }
+
+    [OutputCache(PolicyName = "Catalog")]
+    [HttpGet("brands")]
+    public async Task<ActionResult<IReadOnlyList<ProductBrand>>> GetProductBrands() =>
+        Ok(await productBrandRepo.ListAllAsync());
+
+    [OutputCache(PolicyName = "Catalog")]
+    [HttpGet("types")]
+    public async Task<ActionResult<IReadOnlyList<ProductType>>> GetProductTypes() =>
+        Ok(await productTypeRepo.ListAllAsync());
 }

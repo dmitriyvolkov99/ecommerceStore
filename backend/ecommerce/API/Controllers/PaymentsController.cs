@@ -1,66 +1,73 @@
-using System.IO;
-using System.Threading.Tasks;
-using API.Errors;
 using Core.Entities;
 using Core.Entities.OrderAggregate;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Stripe;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+public class PaymentsController(
+    IPaymentService paymentService,
+    ILogger<PaymentsController> logger,
+    IConfiguration config) : BaseApiController
 {
-    public class PaymentsController : BaseApiController
+    private readonly string _whSecret = config["StripeSettings:WhSecret"] ?? string.Empty;
+
+    [Authorize]
+    [HttpPost("{basketId}")]
+    public async Task<ActionResult<CustomerBasket>> CreateOrUpdatePaymentIntent(string basketId)
     {
-        private readonly IPaymentService _paymentService;
-        private readonly string _whSecret;
-        private readonly ILogger<PaymentsController> _logger;
-        public PaymentsController(IPaymentService paymentService, ILogger<PaymentsController> logger, IConfiguration config)
+        var basket = await paymentService.CreateOrUpdatePaymentIntent(basketId);
+
+        if (basket is null)
         {
-            _logger = logger;
-            _paymentService = paymentService;
-            _whSecret = config.GetSection("StripeSettings:WhSecret").Value;
+            return Problem(
+                detail: "Не удалось подготовить оплату. Проверьте корзину.",
+                statusCode: StatusCodes.Status400BadRequest);
         }
 
-        [Authorize]
-        [HttpPost("{basketId}")]
-        public async Task<ActionResult<CustomerBasket>> CreateOrUpdatePaymentIntent(string basketId)
+        return basket;
+    }
+
+    [HttpPost("webhook")]
+    public async Task<IActionResult> StripeWebhook()
+    {
+        var json = await new StreamReader(Request.Body).ReadToEndAsync();
+
+        Event stripeEvent;
+        try
         {
-            var basket = await _paymentService.CreateOrUpdatePaymentIntent(basketId);
-
-            if (basket == null) return BadRequest(new ApiResponse(400, "Problem with your basket"));
-
-            return basket;
+            stripeEvent = EventUtility.ConstructEvent(json, Request.Headers["Stripe-Signature"], _whSecret);
+        }
+        catch (StripeException ex)
+        {
+            logger.LogWarning(ex, "Webhook Stripe с неверной подписью");
+            return BadRequest();
         }
 
-        [HttpPost("webhook")]
-        public async Task<ActionResult> StripeWebHook()
+        if (stripeEvent.Data.Object is not PaymentIntent intent) return Ok();
+
+        Order? order;
+        switch (stripeEvent.Type)
         {
-            var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-            var stripeEvent = EventUtility.ConstructEvent(json, Request.Headers["Stripe-Signature"], _whSecret);
-
-            PaymentIntent intent;
-            Order order;
-
-            switch (stripeEvent.Type)
-            {
-                case "payment_intent.succeeded":
-                    intent = (PaymentIntent)stripeEvent.Data.Object;
-                    _logger.LogInformation("Payment Succeded: ", intent.Id);
-                    order = await _paymentService.UpdateOrderPaymentSucceded(intent.Id);
-                    _logger.LogInformation("Order updated to payment received: ", order.Id);
-                    break;
-                case "payment_intent.payment_failed":
-                    intent = (PaymentIntent) stripeEvent.Data.Object;
-                    _logger.LogInformation("Payment Failed: ", intent.Id);
-                    order = await _paymentService.UpdateOrderPaymentFailed(intent.Id);
-                    _logger.LogInformation("Payment Failed: ", order.Id);
-                    break;
-            }
-
-            return new EmptyResult();
+            case "payment_intent.succeeded":
+                logger.LogInformation("Платёж прошёл: {PaymentIntentId}", intent.Id);
+                order = await paymentService.UpdateOrderPaymentSucceeded(intent.Id);
+                break;
+            case "payment_intent.payment_failed":
+                logger.LogInformation("Платёж не прошёл: {PaymentIntentId}", intent.Id);
+                order = await paymentService.UpdateOrderPaymentFailed(intent.Id);
+                break;
+            default:
+                return Ok();
         }
+
+        if (order is null)
+            logger.LogWarning("Заказ для платёжного намерения {PaymentIntentId} не найден", intent.Id);
+        else
+            logger.LogInformation("Заказ {OrderId}: статус {Status}", order.Id, order.Status);
+
+        return Ok();
     }
 }

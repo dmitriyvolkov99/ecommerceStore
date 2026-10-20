@@ -11,7 +11,6 @@ namespace Infrastructure.Identity
         {
             if(!userManager.Users.Any())
             {
-                Console.WriteLine("AppIdentityDbContextSeed-----------------------------------");
                 var user = new AppUser
                 {
                     DisplayName = "Dima",

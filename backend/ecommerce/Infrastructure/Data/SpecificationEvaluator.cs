@@ -16,17 +16,16 @@ namespace Infrastructure.Data
                 query = query.Where(spec.Criteria);
             }
 
-            if(spec.OrderBy != null)
-            {
-                query = query.OrderBy(spec.OrderBy);
-            }
+            IOrderedQueryable<TEntity>? ordered = null;
+            if (spec.OrderBy != null)
+                ordered = query.OrderBy(spec.OrderBy);
+            else if (spec.OrderByDescending != null)
+                ordered = query.OrderByDescending(spec.OrderByDescending);
 
-            if(spec.OrderByDescending != null)
-            {
-                query = query.OrderByDescending(spec.OrderByDescending);
-            }
+            if (ordered != null)
+                query = ordered.ThenBy(x => x.Id);
 
-            if(spec.isPagingEnabled)
+            if (spec.isPagingEnabled)
             {
                 query = query.Skip(spec.Skip).Take(spec.Take);
             }

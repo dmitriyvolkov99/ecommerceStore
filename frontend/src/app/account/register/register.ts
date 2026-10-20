@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { map, of, switchMap, timer } from 'rxjs';
 import { AccountService } from '../../_services/account-service';
 import { TextInput } from '../../components/text-input/text-input';
+import { extractErrors } from '../../_utils/http-errors';
 
 @Component({
   selector: 'app-register',
@@ -31,9 +32,8 @@ export class Register {
   protected onSubmit() {
     this.accountService.register(this.registerForm.getRawValue()).subscribe({
       next: () => this.router.navigateByUrl('/shop'),
-      error: error => {
-        console.error(error);
-        this.errors.set(error?.error?.errors ?? ['Не удалось зарегистрироваться']);
+      error: err => {
+        this.errors.set(extractErrors(err))
       },
     });
   }

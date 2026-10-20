@@ -6,75 +6,82 @@ using Core.Entities.OrderAggregate;
 using Core.Interfaces;
 using Core.Specifications;
 
-namespace Infrastructure.Services
+namespace Infrastructure.Services;
+
+public class OrderService(
+    IBasketRepository basketRepo,
+    IUnitOfWork unitOfWork,
+    IPaymentService paymentService) : IOrderService
 {
-    public class OrderService : IOrderService
+    public async Task<Order> CreateOrderAsync(
+        string buyerEmail, int deliveryMethodId, string basketId, Address shippingAddress)
     {
-        private readonly IBasketRepository _basketRepo;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IPaymentService _paymentService;
+        var basket = await basketRepo.GetBasketAsync(basketId);
 
-        public OrderService(IBasketRepository basketRepo, IUnitOfWork unitOfWork, IPaymentService paymentService)
+        // Без корзины, товаров или платёжного намерения заказ создавать нельзя.
+        if (basket is null || basket.Items.Count == 0 || string.IsNullOrEmpty(basket.PaymentIntentId))
+            return null;
+
+        var deliveryMethod = await unitOfWork.Repository<DeliveryMethod>().GetByIdAsync(deliveryMethodId);
+        if (deliveryMethod is null) return null;
+
+        // Все товары одним запросом; одинаковые позиции корзины суммируем.
+        var quantities = basket.Items
+            .GroupBy(i => i.Id)
+            .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+
+        var products = await unitOfWork.Repository<Product>()
+            .ListAsync(new ProductsByIdsSpecification(quantities.Keys.ToList()));
+        if (products.Count != quantities.Count) return null;
+
+        // Цены только из базы, а не из корзины клиента.
+        var items = products
+            .Select(p => new OrderItem(
+                new ProductItemOrdered(p.Id, p.Name, p.PictureUrl), p.Price, quantities[p.Id]))
+            .ToList();
+        var subtotal = items.Sum(i => i.Price * i.Quantity);
+
+        // Заказ для этого платёжного намерения уже есть: неоплаченный заменяем, оплаченный не трогаем.
+        var existingOrder = await unitOfWork.Repository<Order>()
+            .GetEntityWithSpec(new OrderByPaymentIntentIdSpecification(basket.PaymentIntentId));
+        if (existingOrder is not null)
         {
-            this._paymentService = paymentService;
-            this._unitOfWork = unitOfWork;
-            this._basketRepo = basketRepo;
+            if (existingOrder.BuyerEmail != buyerEmail || existingOrder.Status == OrderStatus.PaymentReceived)
+                return null;
+
+            unitOfWork.Repository<Order>().Delete(existingOrder);
         }
 
-        public async Task<Order> CreateOrderASync(string buyerEmail, int deliveryMethodId, string basketId, Address shippingAddress)
+        // Сумма платежа должна совпадать с заказом: синхронизируем доставку и пересчитываем намерение.
+        if (basket.DeliveryMethodId != deliveryMethodId)
         {
-            var basket = await _basketRepo.GetBasketAsync(basketId);
-
-            var items = new List<OrderItem>();
-            foreach (var item in basket.Items)
-            {
-                var productItem = await _unitOfWork.Repository<Product>().GetByIdAsync(item.Id);
-                var itemOrdered = new ProductItemOrdered(productItem.Id, productItem.Name, productItem.PictureUrl);
-                var orderItem = new OrderItem(itemOrdered, productItem.Price, item.Quantity);
-
-                items.Add(orderItem);
-            }
-
-            var deliveryMethod = await _unitOfWork.Repository<DeliveryMethod>().GetByIdAsync(deliveryMethodId);
-
-            var subtotal = items.Sum(item => item.Price * item.Quantity);
-
-            var spec = new OrderByPaymentIntentIdSpecification(basket.PaymentIntentId);
-            var existingOrder = await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
-
-            if (existingOrder != null)
-            {
-                _unitOfWork.Repository<Order>().Delete(existingOrder);
-                await _paymentService.CreateOrUpdatePaymentIntent(basket.PaymentIntentId);
-            }
-
-            var order = new Order(items, buyerEmail, shippingAddress, deliveryMethod, subtotal, basket.PaymentIntentId);
-            _unitOfWork.Repository<Order>().Add(order);
-
-            var result = await _unitOfWork.Complete();
-
-            if (result <= 0) return null;
-
-            return order;
+            basket.DeliveryMethodId = deliveryMethodId;
+            await basketRepo.UpdateBasketAsync(basket);
         }
 
-        public async Task<IReadOnlyList<DeliveryMethod>> GetDeliveryMethodsAsync()
-        {
-            return await _unitOfWork.Repository<DeliveryMethod>().ListAllAsync();
-        }
+        var updatedBasket = await paymentService.CreateOrUpdatePaymentIntent(basketId);
+        if (updatedBasket is null) return null;
 
-        public async Task<Order> GetOrderByIdAsync(int id, string buyerEmail)
-        {
-            var spec = new OrdersWithItemsAndOrderingSpecification(id, buyerEmail);
+        var order = new Order(items, buyerEmail, shippingAddress, deliveryMethod, subtotal, basket.PaymentIntentId);
+        unitOfWork.Repository<Order>().Add(order);
 
-            return await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
-        }
+        return await unitOfWork.Complete() > 0 ? order : null;
+    }
 
-        public async Task<IReadOnlyList<Order>> GetOrdersForUserAsync(string buyerEmail)
-        {
-            var spec = new OrdersWithItemsAndOrderingSpecification(buyerEmail);
+    public async Task<IReadOnlyList<DeliveryMethod>> GetDeliveryMethodsAsync()
+    {
+        return await unitOfWork.Repository<DeliveryMethod>().ListAllAsync();
+    }
 
-            return await _unitOfWork.Repository<Order>().ListAsync(spec);
-        }
+    public async Task<Order> GetOrderByIdAsync(int id, string buyerEmail)
+    {
+        var spec = new OrdersWithItemsAndOrderingSpecification(id, buyerEmail);
+        return await unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
+    }
+
+    public async Task<IReadOnlyList<Order>> GetOrdersForUserAsync(string buyerEmail)
+    {
+        var spec = new OrdersWithItemsAndOrderingSpecification(buyerEmail);
+        return await unitOfWork.Repository<Order>().ListAsync(spec);
     }
 }

@@ -1,15 +1,14 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using API.Dtos;
-using API.Errors;
 using API.Extensions;
-using AutoMapper;
+using API.Helpers;
 using Core.Entities.OrderAggregate;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace API.Controllers
 {
@@ -17,32 +16,36 @@ namespace API.Controllers
     public class OrdersController : BaseApiController
     {
         private readonly IOrderService _orderService;
-        private readonly IMapper _mapper;
-        public OrdersController(IOrderService orderService, IMapper mapper)
+        private readonly AppMapper mapper;
+        public OrdersController(IOrderService orderService, AppMapper mapper)
         {
-            this._mapper = mapper;
+            this.mapper = mapper;
             this._orderService = orderService;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Order>> CreateOrder(OrderDto orderDto)
+        public async Task<ActionResult<OrderToReturnDto>> CreateOrder(OrderDto orderDto)
         {
-            //var email = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email).Value;
             var email = User.RetrieveEmailFromPrincipal();
-            var address = _mapper.Map<AddressDto, Address>(orderDto.ShipToAddress);
-            var order = await _orderService.CreateOrderASync(email, orderDto.DeliveryMethodId, orderDto.BasketId, address);
+            var address = mapper.ToOrderAddress(orderDto.ShipToAddress);
+            var order = await _orderService.CreateOrderAsync(email, orderDto.DeliveryMethodId, orderDto.BasketId, address);
 
-            if(order == null) return BadRequest(new ApiResponse(400, "Problem creating order"));
+            if (order == null)
+            {
+                return Problem(
+                    detail: "Не удалось создать заказ. Проверьте корзину и способ доставки и повторите оплату.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
 
-            return Ok(order);
+            return Ok(mapper.ToDto(order));
         }
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<OrderDto>>> GetOrdersForUser()
+        public async Task<ActionResult<IReadOnlyList<OrderToReturnDto>>> GetOrdersForUser()
         {
             var email = User.RetrieveEmailFromPrincipal();
             var orders = await _orderService.GetOrdersForUserAsync(email);
-            return Ok(_mapper.Map<IReadOnlyList<Order>, IReadOnlyList<OrderToReturnDto>>(orders));
+            return Ok(mapper.ToDtos(orders));
         }
 
         [HttpGet("{id}")]
@@ -51,9 +54,9 @@ namespace API.Controllers
             var email = User.RetrieveEmailFromPrincipal();
             var order = await _orderService.GetOrderByIdAsync(id, email);
 
-            if(order == null) return NotFound(new ApiResponse(404));
+            if (order == null) return NotFound();
 
-            return _mapper.Map<Order, OrderToReturnDto>(order);
+            return mapper.ToDto(order);
         }
 
         [HttpGet("deliveryMethods")]

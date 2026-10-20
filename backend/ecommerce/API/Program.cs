@@ -1,7 +1,5 @@
-using API.Errors;
 using API.Extensions;
 using API.Helpers;
-using API.Middleware;
 using Core.Entities.Identity;
 using Core.Interfaces;
 using Infrastructure.Data;
@@ -13,22 +11,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using StackExchange.Redis;
 
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("Catalog", policy => policy
+        .Expire(TimeSpan.FromMinutes(10))
+        .Tag("catalog"));
+});
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddTransient<ProductUrlResolver>();
 builder.Services.AddTransient<OrderItemUrlResolver>();
-builder.Services.AddAutoMapper(cfg =>
-{
-    cfg.AddProfile<MappingProfiles>();
-});
+builder.Services.AddSingleton<AppMapper>();
+
+//builder.Services.AddAutoMapper(cfg =>
+//{
+//    cfg.AddProfile<MappingProfiles>();
+//});
 
 builder.Services.AddControllers();
 
@@ -46,17 +53,29 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(c => {
     return ConnectionMultiplexer.Connect(configuration);
 });
 
-builder.Services.Configure<ApiBehaviorOptions>(options =>
+// Единый формат ошибок: ProblemDetails.
+builder.Services.AddProblemDetails(options =>
 {
-    options.InvalidModelStateResponseFactory = actionContext =>
+    options.CustomizeProblemDetails = context =>
     {
-        var errors = actionContext.ModelState.Where(e => e.Value.Errors.Count > 0).SelectMany(x => x.Value.Errors).Select(x => x.ErrorMessage).ToArray();
-        var errorResponse = new ApiValidationErrorResponse
+        var problem = context.ProblemDetails;
+
+        problem.Title = problem.Status switch
         {
-            Errors = errors
+            400 => "Некорректный запрос",
+            401 => "Требуется вход в систему",
+            403 => "Доступ запрещён",
+            404 => "Не найдено",
+            429 => "Слишком много запросов",
+            500 => "Внутренняя ошибка сервера",
+            _ => problem.Title
         };
 
-        return new BadRequestObjectResult(errorResponse);
+        problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+        // Подробности исключения показываем только в разработке.
+        if (context.Exception is not null && builder.Environment.IsDevelopment())
+            problem.Detail = context.Exception.ToString();
     };
 });
 
@@ -68,6 +87,20 @@ builder.Services.AddCors(opt =>
     {
         policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:4200");
     });
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
 });
 
 
@@ -90,7 +123,10 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<AppUser>>();
         var identityContext = services.GetRequiredService<AppIdentityDbContext>();
         await identityContext.Database.MigrateAsync();
-        await AppIdentityDbContextSeed.SeedUsersAsync(userManager);
+        if (app.Environment.IsDevelopment())
+        {
+            await AppIdentityDbContextSeed.SeedUsersAsync(userManager);
+        }
     }
     catch (Exception ex)
     {
@@ -99,7 +135,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -107,7 +143,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseStatusCodePagesWithReExecute("/errors/{0}");
+app.UseStatusCodePages();
 
 //app.UseHttpsRedirection();
 
@@ -122,9 +158,12 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseCors("CorsPolicy");
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseOutputCache();
 
 app.MapControllers();
 

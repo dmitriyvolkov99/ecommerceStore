@@ -10,7 +10,7 @@
     </a>
     <div class="mt-auto flex items-center justify-between pt-3">
       <span class="text-base font-extrabold tracking-tight md:text-xl">
-        {{ product().price | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}
+        {{ product().price | currency: 'USD' }}
       </span>
       <button type="button" (click)="addItemToBasket()" [attr.aria-label]="'Добавить ' + product().name + ' в корзину'"
               class="flex size-10 cursor-pointer items-center justify-center rounded-full bg-ink text-white transition hover:bg-accent hover:text-ink md:size-11">

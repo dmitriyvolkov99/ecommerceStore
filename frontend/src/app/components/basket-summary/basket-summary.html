@@ -12,7 +12,7 @@
             <a [routerLink]="['/shop', item.id]" class="block truncate font-bold tracking-tight md:text-[17px]">{{ item.productName }}</a>
             <div class="text-sm text-mute">{{ item.type }}</div>
             <div class="text-sm text-mute md:mt-0.5">
-              {{ item.price | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}
+              {{ item.price | currency: 'USD' }}
             </div>
           </div>
 
@@ -29,7 +29,7 @@
               <span class="text-sm text-mute">× {{ item.quantity }}</span>
             }
             <strong class="min-w-24 text-right text-lg font-extrabold tracking-tight">
-              {{ item.price * item.quantity | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}
+              {{ item.price * item.quantity | currency: 'USD' }}
             </strong>
           </div>
         </div>

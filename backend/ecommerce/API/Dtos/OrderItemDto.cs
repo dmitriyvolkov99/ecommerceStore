@@ -1,11 +1,10 @@
-namespace API.Dtos
+namespace API.Dtos;
+
+public sealed record OrderItemDto
 {
-    public class OrderItemDto
-    {
-        public int ProductId { get; set; }
-        public string ProductName { get; set; }
-        public string PictureUrl { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
-    }
+    public int ProductId { get; init; }
+    public string ProductName { get; init; } = string.Empty;
+    public string PictureUrl { get; init; } = string.Empty;
+    public decimal Price { get; init; }
+    public int Quantity { get; init; }
 }

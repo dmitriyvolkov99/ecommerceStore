@@ -12,10 +12,10 @@
           <div class="min-w-0 flex-1">
             <div class="font-bold">{{ item.productName }}</div>
             <div class="text-sm text-mute">
-              {{ item.quantity }} × {{ item.price | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}
+              {{ item.quantity }} × {{ item.price | currency: 'USD' }}
             </div>
           </div>
-          <strong class="whitespace-nowrap">{{ item.price * item.quantity | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <strong class="whitespace-nowrap">{{ item.price * item.quantity | currency: 'USD' }}</strong>
         </li>
       }
     </ul>
@@ -24,14 +24,14 @@
       <h2 class="text-lg font-extrabold tracking-tight">Сумма заказа</h2>
       <dl class="mt-4 flex flex-col gap-3">
         <div class="flex justify-between text-mute">
-          <dt>Товары</dt><dd class="font-semibold text-ink">{{ o.subtotal | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</dd>
+          <dt>Товары</dt><dd class="font-semibold text-ink">{{ o.subtotal | currency: 'USD' }}</dd>
         </div>
         <div class="flex justify-between text-mute">
-          <dt>Доставка</dt><dd class="font-semibold text-ink">{{ o.shippingPrice | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</dd>
+          <dt>Доставка</dt><dd class="font-semibold text-ink">{{ o.shippingPrice | currency: 'USD' }}</dd>
         </div>
         <div class="h-px bg-line"></div>
         <div class="flex justify-between text-xl font-extrabold">
-          <dt>Итого</dt><dd>{{ o.total | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</dd>
+          <dt>Итого</dt><dd>{{ o.total | currency: 'USD' }}</dd>
         </div>
       </dl>
     </div>

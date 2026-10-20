@@ -1,125 +1,115 @@
-using System.Security.Claims;
-using System.Threading.Tasks;
 using API.Dtos;
-using API.Errors;
 using API.Extensions;
+using API.Helpers;
 using AutoMapper;
 using Core.Entities.Identity;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+public class AccountController(
+    UserManager<AppUser> userManager,
+    SignInManager<AppUser> signInManager,
+    ITokenService tokenService,
+    AppMapper mapper) : BaseApiController
 {
-    public class AccountController : BaseApiController
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly SignInManager<AppUser> _signInManager;
-        private readonly ITokenService _tokenService;
-        private readonly IMapper _mapper;
-        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService, IMapper mapper)
-        {
-            this._mapper = mapper;
-            this._tokenService = tokenService;
-            this._signInManager = signInManager;
-            this._userManager = userManager;
-        }
+        var user = await userManager.FindByEmailFromClaimsPrinciple(User);
+        if (user is null) return Unauthorized();
 
-        [Authorize]
-        [HttpGet]
-        public async Task<ActionResult<UserDto>> GetCurrentUser()
-        {
-            var user = await _userManager.FindByEmailFromClaimsPrinciple(User);
-
-            return new UserDto
-            {
-                DisplayName = user.DisplayName,
-                Token = _tokenService.CreateToken(user),
-                Email = user.Email
-            };
-        }
-
-        [HttpGet("emailexists")]
-        public async Task<ActionResult<bool>> CheckEmailExistsAsync([FromQuery] string email)
-        {
-            return await _userManager.FindByEmailAsync(email) != null;
-        }
-
-        [Authorize]
-        [HttpGet("address")]
-        public async Task<ActionResult<AddressDto>> GetUserAddress()
-        {
-            foreach (var c in User.Claims)
-            {
-                Console.WriteLine($"{c.Type} = {c.Value}");
-            }
-
-            var user = await _userManager.FindUserByClaimsPrincipleWithAddressAsync(User);
-            if (user == null) 
-            {
-                return BadRequest();
-            }
-            return _mapper.Map<Address, AddressDto>(user.Address);
-        }
-
-        [Authorize]
-        [HttpPut("address")]
-        public async Task<ActionResult<AddressDto>> UpdateUserAddres(AddressDto address)
-        {
-            var user = await _userManager.FindUserByClaimsPrincipleWithAddressAsync(User);
-            user.Address = _mapper.Map<AddressDto, Address>(address);
-
-            var result = await _userManager.UpdateAsync(user);
-            if(result.Succeeded) return Ok(_mapper.Map<Address, AddressDto>(user.Address));
-
-            return BadRequest("Problem updating the user");
-        }
-
-        [HttpPost("login")]
-        public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
-        {
-            var user = await _userManager.FindByEmailAsync(loginDto.Email);
-
-            if (user == null) return Unauthorized(new ApiResponse(401));
-
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-
-            if (!result.Succeeded) return Unauthorized(new ApiResponse(401));
-
-            return new UserDto
-            {
-                DisplayName = user.DisplayName,
-                Token = _tokenService.CreateToken(user),
-                Email = user.Email
-            };
-        }
-
-        [HttpPost("register")]
-        public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
-        {
-            if(CheckEmailExistsAsync(registerDto.Email).Result.Value)
-            {
-                return new BadRequestObjectResult(new ApiValidationErrorResponse{Errors = new []{"Email address is in use"}});
-            }
-            
-            var user = new AppUser
-            {
-                DisplayName = registerDto.DisplayName,
-                Email = registerDto.Email,
-                UserName = registerDto.Email
-            };
-
-            var result = await _userManager.CreateAsync(user, registerDto.Password);
-
-            if (!result.Succeeded) return BadRequest(new ApiResponse(400));
-
-            return new UserDto
-            {
-                DisplayName = user.DisplayName,
-                Token = _tokenService.CreateToken(user),
-                Email = user.Email
-            };
-        }
+        return ToUserDto(user);
     }
+
+    [EnableRateLimiting("auth")]
+    [HttpGet("emailexists")]
+    public async Task<ActionResult<bool>> CheckEmailExistsAsync([FromQuery] string email)
+    {
+        return await userManager.FindByEmailAsync(email) is not null;
+    }
+
+    [Authorize]
+    [HttpGet("address")]
+    public async Task<ActionResult<AddressDto>> GetUserAddress()
+    {
+        var user = await userManager.FindUserByClaimsPrincipleWithAddressAsync(User);
+        if (user is null) return Unauthorized();
+        if (user.Address is null) return NoContent();
+
+        return mapper.ToDto(user.Address);
+    }
+
+    [Authorize]
+    [HttpPut("address")]
+    public async Task<ActionResult<AddressDto>> UpdateUserAddress(AddressDto address)
+    {
+        var user = await userManager.FindUserByClaimsPrincipleWithAddressAsync(User);
+        if (user is null) return Unauthorized();
+
+        user.Address = mapper.ToIdentityAddress(address);
+
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return Problem(detail: "Не удалось сохранить адрес", statusCode: StatusCodes.Status400BadRequest);
+
+        return Ok(mapper.ToDto(user.Address));
+    }
+
+    [EnableRateLimiting("auth")]
+    [HttpPost("login")]
+    public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
+    {
+        var user = await userManager.FindByEmailAsync(loginDto.Email);
+        if (user is null) return Unauthorized();
+
+        var result = await signInManager.CheckPasswordSignInAsync(user, loginDto.Password, lockoutOnFailure: true);
+
+        if (result.IsLockedOut)
+        {
+            return Problem(
+                detail: "Слишком много неудачных попыток входа. Повторите позже.",
+                statusCode: StatusCodes.Status429TooManyRequests);
+        }
+
+        if (!result.Succeeded) return Unauthorized();
+
+        return ToUserDto(user);
+    }
+
+    [EnableRateLimiting("auth")]
+    [HttpPost("register")]
+    public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
+    {
+        var user = new AppUser
+        {
+            DisplayName = registerDto.DisplayName,
+            Email = registerDto.Email,
+            UserName = registerDto.Email
+        };
+
+        var result = await userManager.CreateAsync(user, registerDto.Password);
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors.DistinctBy(e => e.Description))
+                ModelState.AddModelError(error.Code, error.Description);
+
+            return ValidationProblem(ModelState);
+        }
+
+        return ToUserDto(user);
+    }
+
+    private UserDto ToUserDto(AppUser user) => new()
+    {
+        DisplayName = user.DisplayName,
+        Token = tokenService.CreateToken(user),
+        Email = user.Email!
+    };
 }

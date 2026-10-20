@@ -6,8 +6,12 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  // Каталог публичный: без токена ответ можно кэшировать на сервере.
+  const isPublicCatalogRequest =
+    req.method === 'GET' && req.url.startsWith(`${environment.apiUrl}products`);
+
   const token = localStorage.getItem('token');
-  if (token) {
+  if (token && !isPublicCatalogRequest) {
     req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
   }
 

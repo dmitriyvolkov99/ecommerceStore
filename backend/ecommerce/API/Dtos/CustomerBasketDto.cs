@@ -1,16 +1,13 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace API.Dtos
+namespace API.Dtos;
+
+public sealed record CustomerBasketDto
 {
-    public class CustomerBasketDto
-    {
-        [Required]
-        public string Id { get; set; }
-        public List<BasketItemDto> Items { get; set; }
-        public int? DeliveryMethodId {get; set;}
-        public string? ClientSecret {get; set;}
-        public string? PaymentIntentId {get; set;}
-        public decimal ShippingPrice {get; set;}
-    }
+    [Required] public required string Id { get; init; }
+    public List<BasketItemDto> Items { get; init; } = [];
+    public int? DeliveryMethodId { get; init; }
+    public string? ClientSecret { get; init; }
+    public string? PaymentIntentId { get; init; }
+    public decimal ShippingPrice { get; init; }
 }

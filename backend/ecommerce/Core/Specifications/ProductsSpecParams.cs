@@ -1,25 +1,35 @@
-namespace Core.Specifications
+using System;
+
+namespace Core.Specifications;
+
+public class ProductsSpecParams
 {
-    public class ProductsSpecParams
+    private const int MaxPageSize = 50;
+    private const int DefaultPageSize = 6;
+
+    private int _pageIndex = 1;
+    private int _pageSize = DefaultPageSize;
+    private string? _search;
+
+    public int PageIndex
     {
-        private const int MaxPageSize = 50;
-        public int PageIndex {get; set;} = 1;
-        private int _pageSize = 6;
-        public int PageSize
-        {
-            get => _pageSize;
-            set => _pageSize = (value > MaxPageSize) ? MaxPageSize : value;
-        }
+        get => _pageIndex;
+        set => _pageIndex = value < 1 ? 1 : value;
+    }
 
-        public int? BrandId {get; set;}
-        public int? TypeId {get; set;}
-        public string Sort {get; set;}
+    public int PageSize
+    {
+        get => _pageSize;
+        set => _pageSize = value < 1 ? DefaultPageSize : Math.Min(value, MaxPageSize);
+    }
 
-        private string _search;
-        public string? Search
-        {
-            get => _search;
-            set => _search = value.ToLower();
-        }
+    public int? BrandId { get; set; }
+    public int? TypeId { get; set; }
+    public string? Sort { get; set; }
+
+    public string? Search
+    {
+        get => _search;
+        set => _search = value?.Trim().ToLowerInvariant();
     }
 }

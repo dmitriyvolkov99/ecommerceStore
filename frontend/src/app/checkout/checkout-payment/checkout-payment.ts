@@ -16,6 +16,9 @@ import { IBasket } from '../../_models/basket';
 import { BasketService } from '../../_services/basket-service';
 import { CheckoutService } from '../../_services/checkout-service';
 import { TextInput } from '../../components/text-input/text-input';
+import { environment } from '../../../environments/environment';
+import { HttpErrorResponse } from '@angular/common/http';
+import { extractErrors } from '../../_utils/http-errors';
 
 declare const Stripe: any;
 
@@ -51,7 +54,7 @@ export class CheckoutPayment implements AfterViewInit, OnDestroy {
   private readonly cardHandler = (event: any) => this.onChange(event);
 
   ngAfterViewInit(): void {
-    this.stripe = Stripe('pk_test_JkiAIKy2xXuU08cecNSD4KDa00lXHFn7FO');
+    this.stripe = Stripe(environment.stripePublishableKey);
     const elements = this.stripe.elements();
 
     this.cardNumber = this.mountElement(elements, 'cardNumber', this.cardNumberElement());
@@ -89,30 +92,42 @@ export class CheckoutPayment implements AfterViewInit, OnDestroy {
   }
 
   // 4242 4242 4242 4242 — тестовая карта
-  async submitOrder() {
-    const basket = this.basketService.basket();
-    if (!basket) return;
+// 4242 4242 4242 4242 — тестовая карта
+async submitOrder() {
+  if (!this.basketService.basket()) return;
 
-    this.loading.set(true);
+  this.loading.set(true);
 
-    try {
-      const createdOrder = await this.createOrder(basket);
-      const paymentResult = await this.confirmPaymentWithStripe(basket);
-
-      if (paymentResult.paymentIntent) {
-        this.basketService.deleteBasket(basket);
-        const navigationExtras: NavigationExtras = { state: createdOrder };
-        this.router.navigate(['checkout', 'success'], navigationExtras);
-      } else {
-        this.toastr.error(paymentResult.error.message);
-      }
-    } catch (error) {
-      console.error(error);
-      this.toastr.error('Не удалось оформить заказ');
-    } finally {
-      this.loading.set(false);
+  try {
+    // 1. Платёжное намерение: сервер пересчитает сумму по ценам из базы.
+    const basket = await firstValueFrom(this.basketService.createPaymentIntent());
+    if (!basket?.clientSecret) {
+      this.toastr.error('Не удалось подготовить оплату. Проверьте корзину.');
+      return;
     }
+
+    // 2. Заказ со статусом «ожидает оплаты».
+    const createdOrder = await this.createOrder(basket);
+
+    // 3. Подтверждение карты в Stripe.
+    const paymentResult = await this.confirmPaymentWithStripe(basket);
+
+    if (paymentResult.paymentIntent) {
+      this.basketService.deleteBasket(basket);
+      const navigationExtras: NavigationExtras = { state: createdOrder };
+      this.router.navigate(['checkout', 'success'], navigationExtras);
+    } else {
+      this.toastr.error(paymentResult.error.message);
+    }
+  } catch (error) {
+    console.error(error);
+    this.toastr.error(
+      error instanceof HttpErrorResponse ? extractErrors(error)[0] : 'Не удалось оформить заказ',
+    );
+  }finally {
+    this.loading.set(false);
   }
+}
 
   private confirmPaymentWithStripe(basket: IBasket) {
     return this.stripe.confirmCardPayment(basket.clientSecret, {

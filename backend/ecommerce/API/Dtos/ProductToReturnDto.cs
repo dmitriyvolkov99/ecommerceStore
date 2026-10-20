@@ -1,13 +1,12 @@
-namespace API.Dtos
+namespace API.Dtos;
+
+public sealed record ProductToReturnDto
 {
-    public class ProductToReturnDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public decimal Price { get; set; }
-        public string PictureUrl { get; set; }
-        public string ProductType { get; set; }
-        public string ProductBrand { get; set; }
-    }
+    public int Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public decimal Price { get; init; }
+    public string PictureUrl { get; init; } = string.Empty;
+    public string ProductType { get; init; } = string.Empty;
+    public string ProductBrand { get; init; } = string.Empty;
 }

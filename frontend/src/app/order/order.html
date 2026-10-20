@@ -9,7 +9,7 @@
     <a [routerLink]="['/orders', order.id]"
        class="grid grid-cols-2 items-center gap-x-4 gap-y-1 border-b border-line px-4 py-4 last:border-b-0 hover:bg-ground md:grid-cols-[110px_1fr_160px_140px_24px] md:px-6 md:py-5">
       <b class="text-base"># {{ order.id }}</b>
-      <b class="text-right md:order-4">{{ order.total | currency: 'RUB' : 'symbol-narrow' : '1.0-0' }}</b>
+      <b class="text-right md:order-4">{{ order.total | currency: 'USD' }}</b>
       <span class="text-sm text-mute md:order-2 md:text-base">{{ order.orderDate | date: 'd MMMM y, HH:mm' }}</span>
       <span class="justify-self-end rounded-full bg-ground px-3 py-1 text-xs font-bold md:order-3 md:justify-self-start md:text-sm">
         {{ order.status }}

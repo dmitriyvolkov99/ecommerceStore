@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.Entities;
@@ -6,106 +6,103 @@ using Core.Entities.OrderAggregate;
 using Core.Interfaces;
 using Core.Specifications;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Stripe;
 using Product = Core.Entities.Product;
 
-namespace Infrastructure.Services
+namespace Infrastructure.Services;
+
+public class PaymentService(
+    IBasketRepository basketRepository,
+    IUnitOfWork unitOfWork,
+    IConfiguration config,
+    ILogger<PaymentService> logger) : IPaymentService
 {
-    public class PaymentService : IPaymentService
+    private PaymentIntentService CreateIntentService() =>
+        new(new StripeClient(config["StripeSettings:SecretKey"]));
+
+    public async Task<CustomerBasket> CreateOrUpdatePaymentIntent(string basketId)
     {
-        private readonly IBasketRepository _basketRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IConfiguration _config;
-        public PaymentService(IBasketRepository basketRepository, IUnitOfWork unitOfWork, IConfiguration config)
+        var basket = await basketRepository.GetBasketAsync(basketId);
+        if (basket is null || basket.Items.Count == 0) return null;
+
+        var shippingPrice = 0m;
+        if (basket.DeliveryMethodId.HasValue)
         {
-            _config = config;
-            _unitOfWork = unitOfWork;
-            _basketRepository = basketRepository;
+            var deliveryMethod = await unitOfWork.Repository<DeliveryMethod>()
+                .GetByIdAsync(basket.DeliveryMethodId.Value);
+            if (deliveryMethod is null) return null;
+
+            shippingPrice = deliveryMethod.Price;
         }
 
-        public async Task<CustomerBasket> CreateOrUpdatePaymentIntent(string basketId)
+        // Цены только из базы, а не из корзины клиента.
+        var ids = basket.Items.Select(i => i.Id).Distinct().ToList();
+        var products = await unitOfWork.Repository<Product>().ListAsync(new ProductsByIdsSpecification(ids));
+        var prices = products.ToDictionary(p => p.Id, p => p.Price);
+        if (ids.Any(id => !prices.ContainsKey(id))) return null;
+
+        foreach (var item in basket.Items)
+            item.Price = prices[item.Id];
+
+        basket.ShippingPrice = shippingPrice;
+
+        // Сумма в центах, округляем корректно (в том числе доставку).
+        var amount = (long)Math.Round(
+            (basket.Items.Sum(i => i.Price * i.Quantity) + shippingPrice) * 100m,
+            MidpointRounding.AwayFromZero);
+
+        var service = CreateIntentService();
+        try
         {
-            StripeConfiguration.ApiKey = _config["StripeSettings:SecretKey"];
-
-            var basket = await _basketRepository.GetBasketAsync(basketId);
-
-            if(basket == null) return null;
-            
-            var shippingPrice = 0m;
-
-            if(basket.DeliveryMethodId.HasValue)
+            if (string.IsNullOrEmpty(basket.PaymentIntentId))
             {
-                var deliveryMethod = await _unitOfWork.Repository<DeliveryMethod>()
-                    .GetByIdAsync((int)basket.DeliveryMethodId);
-                shippingPrice = deliveryMethod.Price;
-            }
-
-            foreach(var item in basket.Items)
-            {
-                var productItem = await _unitOfWork.Repository<Product>().GetByIdAsync(item.Id);
-
-                if(item.Price != productItem.Price)
+                var intent = await service.CreateAsync(new PaymentIntentCreateOptions
                 {
-                    item.Price = productItem.Price;
-                }
-            }
-
-            var service = new PaymentIntentService();
-            PaymentIntent intent;
-
-            if(string.IsNullOrEmpty(basket.PaymentIntentId))
-            {
-                var options = new PaymentIntentCreateOptions
-                {
-                    Amount = (long) basket.Items.Sum(i => i.Quantity * (i.Price * 100)) + (long) shippingPrice * 100,
+                    Amount = amount,
                     Currency = "usd",
-                    PaymentMethodTypes = new List<string> {"card"}
-                };
-
-                intent = await service.CreateAsync(options);
+                    PaymentMethodTypes = ["card"],
+                });
                 basket.PaymentIntentId = intent.Id;
                 basket.ClientSecret = intent.ClientSecret;
             }
             else
             {
-                var options = new PaymentIntentUpdateOptions
-                {
-                    Amount = (long) basket.Items.Sum(i => i.Quantity * (i.Price * 100)) + (long) shippingPrice * 100,
-                };
-                await service.UpdateAsync(basket.PaymentIntentId, options);
+                await service.UpdateAsync(basket.PaymentIntentId, new PaymentIntentUpdateOptions { Amount = amount });
             }
-
-            await _basketRepository.UpdateBasketAsync(basket);
-
-            return basket;
         }
-
-        public async Task<Order> UpdateOrderPaymentFailed(string paymentIntentId)
+        catch (StripeException ex)
         {
-             var spec = new OrderByPaymentIntentIdSpecification(paymentIntentId);
-            var order = await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
-
-            if(order == null) return null;
-
-            order.Status = OrderStatus.PaymentFailed;
-            await _unitOfWork.Complete();
-
-            return order;
+            logger.LogError(ex, "Ошибка Stripe для корзины {BasketId}", basketId);
+            return null;
         }
 
-        public async Task<Order> UpdateOrderPaymentSucceded(string paymentIntentId)
-        {
-            var spec = new OrderByPaymentIntentIdSpecification(paymentIntentId);
-            var order = await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
+        await basketRepository.UpdateBasketAsync(basket);
+        return basket;
+    }
 
-            if(order == null) System.Console.WriteLine("null");
+    public async Task<Order> UpdateOrderPaymentSucceeded(string paymentIntentId)
+    {
+        var order = await unitOfWork.Repository<Order>()
+            .GetEntityWithSpec(new OrderByPaymentIntentIdSpecification(paymentIntentId));
+        if (order is null) return null;
 
-            order.Status = OrderStatus.PaymentReceived;
-            _unitOfWork.Repository<Order>().Update(order);
+        order.Status = OrderStatus.PaymentReceived;
+        await unitOfWork.Complete();
+        return order;
+    }
 
-            await _unitOfWork.Complete();
+    public async Task<Order> UpdateOrderPaymentFailed(string paymentIntentId)
+    {
+        var order = await unitOfWork.Repository<Order>()
+            .GetEntityWithSpec(new OrderByPaymentIntentIdSpecification(paymentIntentId));
+        if (order is null) return null;
 
-            return order;
-        }
+        // Оплаченный заказ не переводим обратно в «ошибку».
+        if (order.Status == OrderStatus.PaymentReceived) return order;
+
+        order.Status = OrderStatus.PaymentFailed;
+        await unitOfWork.Complete();
+        return order;
     }
 }

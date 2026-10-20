@@ -1,20 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace API.Dtos
+namespace API.Dtos;
+
+public sealed record AddressDto
 {
-    public class AddressDto
-    {
-        [Required]
-        public string FirstName { get; set; }
-        [Required]
-        public string LastName { get; set; }
-        [Required]
-        public string Street { get; set; }
-        [Required]
-        public string City { get; set; }
-        [Required]
-        public string State { get; set; }
-        [Required]
-        public string ZipCode { get; set; }
-    }
+    [Required] public required string FirstName { get; init; }
+    [Required] public required string LastName { get; init; }
+    [Required] public required string Street { get; init; }
+    [Required] public required string City { get; init; }
+    [Required] public required string State { get; init; }
+    [Required] public required string ZipCode { get; init; }
 }
