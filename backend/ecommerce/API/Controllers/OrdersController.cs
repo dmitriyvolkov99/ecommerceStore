@@ -26,7 +26,7 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<OrderToReturnDto>> CreateOrder(OrderDto orderDto)
         {
-            var email = User.RetrieveEmailFromPrincipal();
+            var email = User.GetEmail();
             var address = mapper.ToOrderAddress(orderDto.ShipToAddress);
             var order = await _orderService.CreateOrderAsync(email, orderDto.DeliveryMethodId, orderDto.BasketId, address);
 
@@ -43,7 +43,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<OrderToReturnDto>>> GetOrdersForUser()
         {
-            var email = User.RetrieveEmailFromPrincipal();
+            var email = User.GetEmail();
             var orders = await _orderService.GetOrdersForUserAsync(email);
             return Ok(mapper.ToDtos(orders));
         }
@@ -51,7 +51,7 @@ namespace API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderToReturnDto>> GetOrderByIdForUser(int id)
         {
-            var email = User.RetrieveEmailFromPrincipal();
+            var email = User.GetEmail();
             var order = await _orderService.GetOrderByIdAsync(id, email);
 
             if (order == null) return NotFound();

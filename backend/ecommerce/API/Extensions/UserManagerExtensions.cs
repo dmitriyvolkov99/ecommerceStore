@@ -1,26 +1,26 @@
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Core.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace API.Extensions
+namespace API.Extensions;
+
+public static class UserManagerExtensions
 {
-    public static class UserManagerExtensions
+    public static async Task<AppUser?> FindByClaimsPrincipalAsync(
+        this UserManager<AppUser> userManager, ClaimsPrincipal principal)
     {
-        public static async Task<AppUser> FindUserByClaimsPrincipleWithAddressAsync(this UserManager<AppUser> input, ClaimsPrincipal user)
-        {
-            var email = user.FindFirstValue(ClaimTypes.Email);
+        var id = principal.GetUserId();
+        return id is null ? null : await userManager.FindByIdAsync(id);
+    }
 
-            return await input.Users.Include(x => x.Address).SingleOrDefaultAsync(x => x.Email == email);
-        }
+    public static async Task<AppUser?> FindByClaimsPrincipalWithAddressAsync(
+        this UserManager<AppUser> userManager, ClaimsPrincipal principal)
+    {
+        var id = principal.GetUserId();
 
-        public static async Task<AppUser> FindByEmailFromClaimsPrinciple(this UserManager<AppUser> input, ClaimsPrincipal user)
-        {
-            var email = user.FindFirstValue(ClaimTypes.Email);
-            //var email = user?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
-            return await input.Users.SingleOrDefaultAsync(x => x.Email == email);
-        }
+        return id is null
+            ? null
+            : await userManager.Users.Include(x => x.Address).FirstOrDefaultAsync(x => x.Id == id);
     }
 }

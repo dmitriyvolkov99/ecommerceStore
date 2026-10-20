@@ -40,6 +40,9 @@ public partial class AppMapper
 
     public partial AddressDto ToDto(IdentityAddress address);
 
+    [MapperIgnoreTarget(nameof(IdentityAddress.Id))]
+    [MapperIgnoreTarget(nameof(IdentityAddress.AppUserId))]
+    [MapperIgnoreTarget(nameof(IdentityAddress.AppUser))]
     public partial IdentityAddress ToIdentityAddress(AddressDto address);
 
     public partial OrderAddress ToOrderAddress(AddressDto address);

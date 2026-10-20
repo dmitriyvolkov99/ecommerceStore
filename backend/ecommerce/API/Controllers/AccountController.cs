@@ -20,7 +20,7 @@ public class AccountController(
     [HttpGet]
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
-        var user = await userManager.FindByEmailFromClaimsPrinciple(User);
+        var user = await userManager.FindByClaimsPrincipalAsync(User);
         if (user is null) return Unauthorized();
 
         return ToUserDto(user);
@@ -37,7 +37,7 @@ public class AccountController(
     [HttpGet("address")]
     public async Task<ActionResult<AddressDto>> GetUserAddress()
     {
-        var user = await userManager.FindUserByClaimsPrincipleWithAddressAsync(User);
+        var user = await userManager.FindByClaimsPrincipalWithAddressAsync(User);
         if (user is null) return Unauthorized();
         if (user.Address is null) return NoContent();
 
@@ -48,7 +48,7 @@ public class AccountController(
     [HttpPut("address")]
     public async Task<ActionResult<AddressDto>> UpdateUserAddress(AddressDto address)
     {
-        var user = await userManager.FindUserByClaimsPrincipleWithAddressAsync(User);
+        var user = await userManager.FindByClaimsPrincipalWithAddressAsync(User);
         if (user is null) return Unauthorized();
 
         user.Address = mapper.ToIdentityAddress(address);

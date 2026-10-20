@@ -1,12 +1,13 @@
 using System.Security.Claims;
 
-namespace API.Extensions
+namespace API.Extensions;
+
+public static class ClaimsPrincipalExtensions
 {
-    public static class ClaimsPrincipalExtensions
-    {
-        public static string RetrieveEmailFromPrincipal(this ClaimsPrincipal user)
-        {
-            return user.FindFirstValue(ClaimTypes.Email);
-        }
-    }
+    public static string? GetUserId(this ClaimsPrincipal user) =>
+        user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    public static string GetEmail(this ClaimsPrincipal user) =>
+        user.FindFirstValue(ClaimTypes.Email)
+        ?? throw new InvalidOperationException("В токене нет claim с email");
 }
