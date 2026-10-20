@@ -5,10 +5,11 @@ import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { IOrder } from '../_models/order';
 import { OrderService } from '../_services/order-service';
+import { OrderStatus } from './order-status/order-status';
 
 @Component({
   selector: 'app-order',
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, CurrencyPipe, DatePipe, OrderStatus],
   templateUrl: './order.html',
   styleUrl: './order.css',
 })

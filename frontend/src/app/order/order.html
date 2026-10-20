@@ -11,8 +11,8 @@
       <b class="text-base"># {{ order.id }}</b>
       <b class="text-right md:order-4">{{ order.total | currency: 'USD' }}</b>
       <span class="text-sm text-mute md:order-2 md:text-base">{{ order.orderDate | date: 'd MMMM y, HH:mm' }}</span>
-      <span class="justify-self-end rounded-full bg-ground px-3 py-1 text-xs font-bold md:order-3 md:justify-self-start md:text-sm">
-        {{ order.status }}
+      <span class="md:order-3 justify-self-end md:justify-self-start">
+        <app-order-status [status]="order.status" />
       </span>
       <span class="hidden text-mute md:order-5 md:block">›</span>
     </a>

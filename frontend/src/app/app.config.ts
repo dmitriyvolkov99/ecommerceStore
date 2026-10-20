@@ -15,13 +15,13 @@ import { loadingInterceptor } from './_interceptors/loading-interceptor';
 import { AccountService } from './_services/account-service';
 import { BasketService } from './_services/basket-service';
 import { errorInterceptor } from './_interceptors/error-interceptor';
-// import { registerLocaleData } from '@angular/common';
-// import localeRu from '@angular/common/locales/ru';
-// registerLocaleData(localeRu);
+import { registerLocaleData } from '@angular/common';
+import localeRu from '@angular/common/locales/ru';
+registerLocaleData(localeRu);
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    //{ provide: LOCALE_ID, useValue: 'ru' },
+    { provide: LOCALE_ID, useValue: 'ru' },
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(

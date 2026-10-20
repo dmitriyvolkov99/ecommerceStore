@@ -92,7 +92,6 @@ export class CheckoutPayment implements AfterViewInit, OnDestroy {
   }
 
   // 4242 4242 4242 4242 — тестовая карта
-// 4242 4242 4242 4242 — тестовая карта
 async submitOrder() {
   if (!this.basketService.basket()) return;
 
